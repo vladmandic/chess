@@ -1,20 +1,20 @@
 {
   "globals": {},
   "env": {
-      "browser": true,
+      "browser": false,
       "commonjs": true,
       "node": true,
       "es2022": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": "latest"
+    "ecmaVersion": "latest",
+    "sourceType": "module"
   },
   "plugins": [
     "@typescript-eslint",
     "import",
-    "json",
-    "html"
+    "json"
   ],
   "extends": [
     "airbnb-base",
@@ -31,6 +31,7 @@
     "max-len": [1, 275, 3],
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-inferrable-types": "off",
     "dot-notation":"off",
     "import/extensions": "off",
     "import/no-extraneous-dependencies":"off",
@@ -40,11 +41,14 @@
     "no-mixed-operators":"off",
     "no-nested-ternary":"off",
     "no-plusplus":"off",
+    "no-await-in-loop":"off",
     "no-param-reassign":"off",
     "no-restricted-syntax": "off",
     "object-curly-newline":"off",
     "prefer-destructuring":"off",
+    "no-return-assign":"off",
     "prefer-template":"off",
+    "max-classes-per-file": "off",
     "radix":"off"
   }
 }

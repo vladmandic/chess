@@ -1,0 +1,17 @@
+[Event "Live Chess - chess"]
+[Site "Chess.com"]
+[Date "2022.03.24"]
+[Round "?"]
+[White "VladMandic"]
+[Black "Alecasux"]
+[Result "1-0"]
+[TimeControl "600"]
+[WhiteElo "1011"]
+[BlackElo "1037"]
+[Termination "VladMandic won by resignation"]
+
+1. d4 d5 2. e3 Nc6 3. Nf3 e6 4. c4 dxc4 5. Bxc4 Bd7 6. O-O Nf6 7. Nc3 Bd6 8. a3
+O-O 9. b4 a6 10. Bb2 b5 11. Bb3 e5 12. Qc2 e4 13. Nd2 g6 14. Ncxe4 Bf5 15. d5
+Ne7 16. Bxf6 c5 17. bxc5 Bxc5 18. Qxc5 Re8 19. d6 Bxe4 20. Nxe4 Rc8 21. dxe7 Qc7
+22. Qxc7 Rxc7 23. Nd6 Rcxe7 24. Nxe8 Rxe8 25. Rfd1 Kf8 26. Rd8 Rxd8 27. Bxd8 Ke8
+28. Ba5 1-0

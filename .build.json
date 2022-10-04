@@ -7,8 +7,7 @@
   },
   "profiles": {
     "production": ["clean", "compile", "typings", "typedoc", "lint", "changelog"],
-    "development": ["serve", "watch", "lint", "compile"],
-    "serve": ["serve"]
+    "development": ["watch", "lint", "compile"]
   },
   "lint": {
     "locations": [ "*.json", "src/**/*.ts" ],
@@ -21,14 +20,6 @@
     "log": "CHANGELOG.md"
   },
   "serve": {
-    "sslKey": "node_modules/@vladmandic/build/cert/https.key",
-    "sslCrt": "node_modules/@vladmandic/build/cert/https.crt",
-    "httpPort": 8000,
-    "httpsPort": 8001,
-    "documentRoot": "",
-    "defaultFolder": "public/",
-    "defaultFile": "index.html",
-    "cors": false
   },
   "build": {
     "global": {
@@ -36,9 +27,9 @@
       "sourcemap": true,
       "treeShaking": true,
       "ignoreAnnotations": true,
-      "platform": "browser",
-      "format": "esm",
-    "banner": { "js": "/*\n  TEMPLATE\n  homepage: <https://github.com/vladmandic/TEMPLATE>\n  author: <https://github.com/vladmandic>'\n*/\n" }
+      "platform": "node",
+      "format": "cjs",
+    "banner": { "js": "/*\n  Chess\n  homepage: <https://github.com/vladmandic/chess>\n  author: <https://github.com/vladmandic>'\n*/\n" }
     },
     "development": {
       "minify": false
@@ -50,7 +41,7 @@
       {
         "name": "application",
         "input": "src/index.ts",
-        "output": "dist/index.js",
+        "output": "dist/chess.js",
         "typings": "types/lib",
         "typedoc": "typedoc"
       }

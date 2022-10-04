@@ -1,0 +1,256 @@
+import * as log from '@vladmandic/pilogger';
+import { spawn, ChildProcess } from 'child_process';
+import { existsSync, statSync } from 'fs';
+
+export type State = 'starting' | 'started' | 'stopping' | 'ready' | 'busy' | 'terminated';
+
+export interface UCIOptions {
+  debug: boolean;
+  lines: number;
+  depth: number;
+  maxtime: number;
+  engine: string;
+  nnue: string;
+  options: string[];
+}
+
+export type ScoreType = 'exact' | 'mate' | 'lowerbound' | 'upperbound' | 'notfound';
+
+export class Score {
+  score: number; // The score for the analysis.
+  type: ScoreType; // Type of the score.
+
+  constructor(score: number, type: ScoreType) {
+    this.score = score;
+    this.type = type;
+  }
+
+  toString() {
+    switch (this.type) {
+      case 'exact': return this.score;
+      case 'mate': return `mate in ${this.score}`;
+      case 'lowerbound': return `>= ${this.score}`;
+      case 'upperbound': return `<= ${this.score}`;
+      default: return '';
+    }
+  }
+}
+
+export interface Line {
+  score: Score,
+  cpl: number,
+  moves: string[],
+}
+
+export interface Analysis {
+  time: number,
+  depth: number,
+  lines: Line[],
+  noLegalMoves?: boolean,
+}
+
+export class UCI {
+  private instance: ChildProcess;
+  private buffer: Buffer;
+  private timeout: NodeJS.Timeout | undefined; // eslint-disable-line no-undef
+  private startTime: bigint = process.hrtime.bigint();
+  name = '';
+  info: string[] = [];
+  lines: Map<number, Line[]> = new Map();
+  depth = 0;
+  options: UCIOptions = { lines: 25, depth: 10, maxtime: 1000, engine: '', nnue: '', debug: false, options: [] };
+  state: State;
+  turn: undefined | 'white' | 'black';
+  engineOptions: string[] = [];
+  duration = 0;
+
+  constructor(options: Partial<UCIOptions>) {
+    if (options?.depth) this.options.depth = options.depth;
+    if (options?.lines) this.options.lines = options.lines;
+    if (options?.maxtime) this.options.maxtime = options.maxtime;
+    if (options?.debug) this.options.debug = options.debug;
+    if (options?.engine) this.options.engine = options.engine;
+    if (options?.nnue) this.options.nnue = options.nnue;
+    if (options?.options) this.options.options = options.options;
+
+    if (!existsSync(this.options.engine)) throw new Error(`uci: engine not found: ${this.options.engine}`);
+    if (!statSync(this.options.engine).isFile()) throw new Error(`uci: engine not valid: ${this.options.engine}`);
+    this.instance = spawn(this.options.engine);
+    this.buffer = Buffer.alloc(0); // Initialise the output buffer.
+    this.instance.stdout?.on('data', (chunk: Buffer) => { // Handle the output of the Stockfish process.
+      if (this.options.debug) log.data('sf', { stdout: chunk.toString() }); // .toString());
+      chunk = Buffer.concat([this.buffer, chunk]); // Prepend the previous buffer to the chunk.
+      const lastNewline = chunk.lastIndexOf('\n'); // If the last line doesn't end with a newline, buffer the data until we get a newline.
+      if (lastNewline !== chunk.length - 1) this.buffer = chunk.slice(lastNewline + 1);
+      else this.buffer = Buffer.alloc(0);
+      this.process(chunk.slice(0, lastNewline).toString()); // Process all data that is ready.
+    });
+    this.send('uci');
+    this.send('setoption name UCI_AnalyseMode value true');
+    if (this.options.nnue.length > 0) {
+      this.send(`setoption name EvalFile value ${this.options.nnue}`);
+      this.send('setoption name Use NNUE value true');
+    } else {
+      this.send('setoption name Use NNUE value false');
+    }
+    for (const option of this.options.options) {
+      this.send(`setoption name ${option}`);
+    }
+    this.send('go depth 1'); // to capture initial engine output
+    this.send('stop');
+    this.send('isready');
+    this.state = 'starting';
+    this.reset();
+  }
+
+  async reset() {
+    this.startTime = process.hrtime.bigint();
+    this.duration = 0;
+    this.lines = new Map();
+    this.depth = 0;
+    this.state = 'busy';
+    this.send('ucinewgame');
+    this.send('isready');
+    await this.ready();
+  }
+
+  async ready(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (this.state === 'ready') {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, 5);
+    });
+  }
+
+  set fen(fenString: string) {
+    this.send(`position fen ${fenString}`);
+    this.turn = fenString.split(' ')[1] === 'w' ? 'white' : 'black';
+  }
+
+  set move(movesString: string) {
+    this.send(`position startpos moves ${movesString}`);
+    this.turn = movesString.split(' ').length % 2 ? 'black' : 'white';
+  }
+
+  start(options?: Partial<UCIOptions>) {
+    this.state = 'busy';
+    this.startTime = process.hrtime.bigint();
+    this.startTime = process.hrtime.bigint();
+    this.lines = new Map();
+    this.depth = 0;
+    if (options?.depth) this.options.depth = options.depth;
+    if (options?.lines) this.options.lines = options.lines;
+    if (options?.maxtime) this.options.maxtime = options.maxtime;
+    if (this.options.lines > 1) this.send(`setoption name MultiPV value ${this.options.lines}`);
+    if (this.options.depth) this.send(`go depth ${this.options.depth}`);
+    else this.send('go infinite');
+    if (this.timeout) clearTimeout(this.timeout);
+    if (this.options.maxtime) this.timeout = setTimeout(() => this.stop(), this.options.maxtime);
+  }
+
+  stop() {
+    this.send('stop');
+    this.state = 'stopping';
+  }
+
+  process(chunk: string) {
+    const lines = chunk
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    for (const line of lines) {
+      if (line.startsWith('id name')) this.name = line.replace('id name ', '');
+      if (line.startsWith('option')) this.engineOptions.push(line.replace('option name ', ''));
+      if (line.startsWith('uciok')) this.state = 'started';
+      if (line.startsWith('readyok') || line.startsWith('bestmove')) {
+        this.duration = Number((process.hrtime.bigint() - this.startTime) / 1000n / 1000n);
+        this.state = 'ready';
+      }
+      if (this.state !== 'ready' && this.state !== 'busy') continue;
+      if (line.startsWith('info')) {
+        if (line.includes('pv')) {
+          this.processInfo(line);
+        } else if (line.includes('mate 0') || line.includes('cp 0')) {
+          this.processNoLegalMoves();
+        } else if (line.startsWith('info string')) {
+          const info = line.replace('info string ', '');
+          if (!this.info.includes(info)) this.info.push(info);
+        } else if (line.includes('currmove')) {
+          continue;
+        } else {
+          log.data('sf unknown line', { line });
+        }
+      }
+    }
+  }
+
+  processInfo(line: string) {
+    if (line.indexOf(' score ') === -1 || line.indexOf(' depth ') === -1 || line.indexOf(' multipv ') === -1) return; // The line does not contain any analysis data. We will ignore it.
+    // Parse the depth of the stockfish output.
+    const depthIndexBegin = line.indexOf(' depth ') + 7;
+    const depthIndexEnd = line.indexOf(' ', depthIndexBegin);
+    const depth = +line.substring(depthIndexBegin, depthIndexEnd);
+    // Parse the line number of the stockfish output.
+    const lineNumberIndexBegin = line.indexOf(' multipv ') + 9;
+    const lineNumberIndexEnd = line.indexOf(' ', lineNumberIndexBegin);
+    const lineNumber = +line.substring(lineNumberIndexBegin, lineNumberIndexEnd);
+    // Parse the score of the stockfish output.
+    const scoreTypeIndexBegin = line.indexOf(' score ') + 7;
+    const scoreTypeIndexEnd = line.indexOf(' ', scoreTypeIndexBegin);
+    const scoreType = line.substring(scoreTypeIndexBegin, scoreTypeIndexEnd);
+    const scoreIndexBegin = scoreTypeIndexEnd + 1;
+    const scoreIndexEnd = line.indexOf(' ', scoreIndexBegin);
+    let score: Score;
+    if (scoreType === 'cp') {
+      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'exact');
+    } else if (scoreType === 'mate') {
+      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd), 'mate');
+    } else if (scoreType === 'lowerbound') {
+      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'lowerbound');
+    } else if (scoreType === 'upperbound') {
+      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'upperbound');
+    } else {
+      log.data('sf unknown score', { scoreType });
+      return;
+    }
+    if (this.turn === 'black') score.score *= -1; // Convert the score to white's perspective.
+    // Parse the moves of the stockfish output.
+    const movesIndexBegin = line.indexOf(' pv ') + 4;
+    const moves = line.substring(movesIndexBegin).split(' ');
+    // Add the line to the best lines.
+    if (!this.lines.has(depth)) this.lines.set(depth, []);
+    const linesOfdepth = this.lines.get(depth) || [];
+    const bestScore = linesOfdepth[0]?.score?.score || 0;
+    const cpl = Math.round(100 * (score.score - bestScore)) / 100;
+    linesOfdepth[lineNumber - 1] = { score, moves, cpl };
+    const numLinesOfdepth = linesOfdepth?.filter((l) => l !== null).length;
+    const analysisComplete = numLinesOfdepth === this.options.lines || depth > 1 && numLinesOfdepth === this.lines.get(1)?.length;
+    if (analysisComplete && depth > this.depth) this.depth = depth;
+  }
+
+  processNoLegalMoves() {
+    return { depth: 0, time: this.duration, lines: [], noLegalMoves: true };
+  }
+
+  get best(): Analysis {
+    return { depth: this.depth, time: this.duration, lines: this.lines.get(this.depth) || [] };
+  }
+
+  send(str: string) {
+    this.instance?.stdin?.write(`${str}\n`);
+  }
+
+  terminate() {
+    this.send('stop');
+    this.send('quit');
+    setTimeout(() => this.instance.kill('SIGTERM'), 10);
+    setTimeout(() => this.instance.kill('SIGKILL'), 100);
+    setTimeout(() => {
+      if (this.options.debug) log.data('sf exit', { code: this.instance.exitCode, signal: this.instance.signalCode });
+    }, 200);
+    this.state = 'terminated';
+  }
+}
