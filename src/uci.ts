@@ -4,17 +4,22 @@ import { existsSync, statSync } from 'fs';
 
 export type State = 'starting' | 'started' | 'stopping' | 'ready' | 'busy' | 'terminated';
 
-export interface UCIOptions {
+export interface Options {
   debug: boolean;
   lines: number;
   depth: number;
-  maxtime: number;
+  maxTime: number;
   engine: string;
   nnue: string;
+  maxScore: number;
   options: string[];
 }
 
 export type ScoreType = 'exact' | 'mate' | 'lowerbound' | 'upperbound' | 'notfound';
+
+export interface UCIResult {
+  name: string, info: string[], options: Options | undefined, time: number
+}
 
 export class Score {
   score: number; // The score for the analysis.
@@ -49,25 +54,28 @@ export interface Analysis {
   noLegalMoves?: boolean,
 }
 
-export class UCI {
+export class Engine {
   private instance: ChildProcess;
   private buffer: Buffer;
   private timeout: NodeJS.Timeout | undefined; // eslint-disable-line no-undef
   private startTime: bigint = process.hrtime.bigint();
-  name = '';
+  private noMoves: boolean = false;
+  private lines: Map<number, Line[]> = new Map();
+  private depth = 0;
+  private turn: undefined | 'white' | 'black';
+  private engineOptions: string[] = [];
+  private duration = 0;
+  private lastFen: string = '';
+  private ascii: string[] = [];
+  name: string | undefined;
   info: string[] = [];
-  lines: Map<number, Line[]> = new Map();
-  depth = 0;
-  options: UCIOptions = { lines: 25, depth: 10, maxtime: 1000, engine: '', nnue: '', debug: false, options: [] };
+  options: Options = { lines: 25, depth: 10, maxTime: 1000, engine: '', nnue: '', debug: false, maxScore: 10, options: [] };
   state: State;
-  turn: undefined | 'white' | 'black';
-  engineOptions: string[] = [];
-  duration = 0;
 
-  constructor(options: Partial<UCIOptions>) {
+  constructor(options: Partial<Options>) {
     if (options?.depth) this.options.depth = options.depth;
     if (options?.lines) this.options.lines = options.lines;
-    if (options?.maxtime) this.options.maxtime = options.maxtime;
+    if (options?.maxTime) this.options.maxTime = options.maxTime;
     if (options?.debug) this.options.debug = options.debug;
     if (options?.engine) this.options.engine = options.engine;
     if (options?.nnue) this.options.nnue = options.nnue;
@@ -85,6 +93,7 @@ export class UCI {
       else this.buffer = Buffer.alloc(0);
       this.process(chunk.slice(0, lastNewline).toString()); // Process all data that is ready.
     });
+    this.send('compiler');
     this.send('uci');
     this.send('setoption name UCI_AnalyseMode value true');
     if (this.options.nnue.length > 0) {
@@ -108,8 +117,13 @@ export class UCI {
     this.duration = 0;
     this.lines = new Map();
     this.depth = 0;
+    this.noMoves = false;
+    this.ascii = [];
     this.state = 'busy';
+    this.send('stop');
     this.send('ucinewgame');
+    this.send('position startpos');
+    // this.send('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1');
     this.send('isready');
     await this.ready();
   }
@@ -126,8 +140,14 @@ export class UCI {
   }
 
   set fen(fenString: string) {
+    this.lastFen = fenString;
+    this.noMoves = false;
     this.send(`position fen ${fenString}`);
-    this.turn = fenString.split(' ')[1] === 'w' ? 'white' : 'black';
+    this.turn = fenString.split(' ')[1] === 'b' ? 'black' : 'white';
+  }
+
+  get fen() {
+    return this.lastFen;
   }
 
   set move(movesString: string) {
@@ -135,25 +155,38 @@ export class UCI {
     this.turn = movesString.split(' ').length % 2 ? 'black' : 'white';
   }
 
-  start(options?: Partial<UCIOptions>) {
+  start(options?: Partial<Options>) {
     this.state = 'busy';
-    this.startTime = process.hrtime.bigint();
     this.startTime = process.hrtime.bigint();
     this.lines = new Map();
     this.depth = 0;
     if (options?.depth) this.options.depth = options.depth;
     if (options?.lines) this.options.lines = options.lines;
-    if (options?.maxtime) this.options.maxtime = options.maxtime;
+    if (options?.maxTime) this.options.maxTime = options.maxTime;
     if (this.options.lines > 1) this.send(`setoption name MultiPV value ${this.options.lines}`);
-    if (this.options.depth) this.send(`go depth ${this.options.depth}`);
+    if (this.options.depth > 0) this.send(`go depth ${this.options.depth}`);
     else this.send('go infinite');
     if (this.timeout) clearTimeout(this.timeout);
-    if (this.options.maxtime) this.timeout = setTimeout(() => this.stop(), this.options.maxtime);
+    if (this.options.maxTime) this.timeout = setTimeout(() => this.stop(), this.options.maxTime);
   }
 
   stop() {
     this.send('stop');
     this.state = 'stopping';
+  }
+
+  async board(): Promise<string> {
+    this.ascii = [];
+    this.send('d');
+    await this.ready();
+    return this.ascii.join('\n');
+  }
+
+  async play(fen: string): Promise<Analysis> {
+    this.fen = fen;
+    this.start();
+    await this.ready();
+    return this.best;
   }
 
   process(chunk: string) {
@@ -174,7 +207,7 @@ export class UCI {
         if (line.includes('pv')) {
           this.processInfo(line);
         } else if (line.includes('mate 0') || line.includes('cp 0')) {
-          this.processNoLegalMoves();
+          this.noMoves = true;
         } else if (line.startsWith('info string')) {
           const info = line.replace('info string ', '');
           if (!this.info.includes(info)) this.info.push(info);
@@ -183,6 +216,14 @@ export class UCI {
         } else {
           log.data('sf unknown line', { line });
         }
+      }
+      if (line.startsWith('|' || line.startsWith('+'))) {
+        const l = line.replace(/[1-8,|]/g, '');
+        this.ascii.push(l);
+      }
+      if (line.startsWith('Compil')) {
+        const info = line.replace('Compiled by', '').replace('Compilation settings include:', '').trim();
+        if (!this.info.includes(info)) this.info.push(info);
       }
     }
   }
@@ -231,11 +272,8 @@ export class UCI {
     if (analysisComplete && depth > this.depth) this.depth = depth;
   }
 
-  processNoLegalMoves() {
-    return { depth: 0, time: this.duration, lines: [], noLegalMoves: true };
-  }
-
   get best(): Analysis {
+    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, cpl: 0, moves: [] }] };
     return { depth: this.depth, time: this.duration, lines: this.lines.get(this.depth) || [] };
   }
 

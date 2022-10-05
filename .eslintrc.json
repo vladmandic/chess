@@ -49,6 +49,7 @@
     "no-return-assign":"off",
     "prefer-template":"off",
     "max-classes-per-file": "off",
+    "object-property-newline":"off",
     "radix":"off"
   }
 }

@@ -6,7 +6,7 @@
     "output": ""
   },
   "profiles": {
-    "production": ["clean", "compile", "typings", "typedoc", "lint", "changelog"],
+    "production": ["clean", "lint", "compile"],
     "development": ["watch", "lint", "compile"]
   },
   "lint": {
@@ -41,9 +41,7 @@
       {
         "name": "application",
         "input": "src/index.ts",
-        "output": "dist/chess.js",
-        "typings": "types/lib",
-        "typedoc": "typedoc"
+        "output": "dist/chess.js"
       }
     ]
   },

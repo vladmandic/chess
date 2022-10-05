@@ -1,59 +1,49 @@
 import { readFileSync } from 'fs';
 import * as log from '@vladmandic/pilogger';
-import { UCI, UCIOptions } from './uci';
-import { Game, processPGN } from './game';
+import * as UCI from './uci';
+import * as game from './game';
 
 const playerName = 'VladMandic';
 
-const uciOptions: UCIOptions = {
+const uciOptions: UCI.Options = {
   debug: false, // log uci communication
   lines: 1, // analyze n top lines
   depth: 12, // max depth per move
-  maxtime: 500, // max time per move in ms
-  engine: '/home/vlado/dev/chess/engine/sf15-bmi2',
-  nnue: 'nn-6877cd24400e.nnue',
-  options: ['Threads value 16'], // additional options to pass to engine // example ['Threads value 16', 'Hash value 128']
+  maxTime: 2000, // max time per move in ms
+  maxScore: 10, // consider game decided for purpose of statistics once score is reached
+  engine: '/home/vlado/dev/chess/engine/sf15-bmi2', // stockfish executable
+  nnue: 'nn-6877cd24400e.nnue', // nnue file with path local to stockfish binary
+  options: ['Threads value 16'], // additional options to pass to stockfish engine
 };
 
 async function main() {
   log.configure({ inspect: { breakLength: 400 } });
   log.headerJson();
 
-  const engine = new UCI(uciOptions);
-  await engine.ready();
+  const engine: UCI.Engine = new UCI.Engine(uciOptions); // create engine
+  await engine.ready(); // wait until engine is ready
   log.state('engine', { name: engine.name, state: engine.state, info: engine.info });
   log.state('options', engine.options);
 
-  const games: Game[] = [];
-  let files: string[] = [];
-  const args = process.argv.slice(2);
-  const globby = await import('globby');
-  files = await globby.globby(args, { expandDirectories: true, gitignore: true, deep: 2 });
-  log.info({ files });
-  for (const file of files) {
-    const text = readFileSync(file, 'utf8');
-    const pgnGames = await processPGN(engine, text, file, playerName);
-    log.state({ file, games: pgnGames.length });
-    games.push(...pgnGames);
-    for (const game of pgnGames) {
-      log.data({
-        file: game.file,
-        game: game.game,
-        date: game.date,
-        players: game.players,
-        win: game.win,
-        color: game.color,
-        moves: game.moves,
-        acpl: game.acpl,
-        time: game.engine.time,
-        summary: game.summary,
-      });
+  const games: game.Game[] = [];
+  const args = process.argv.slice(2); // all cli ars after process name
+  const globby = await import('globby'); // dynamic import as globby is esm
+  const files: string[] = await globby.globby(args, { expandDirectories: true, gitignore: true, deep: 2 });
+  log.info('list', { files: files.length });
+  for (const fileName of files) {
+    const pgnText = readFileSync(fileName, 'utf8');
+    // analyze game using specified engine and from perspecitive of a specific player
+    const analyzedGames: game.Game[] = await game.analyze(engine, pgnText, fileName, playerName);
+    games.push(...analyzedGames);
+    for (const g of analyzedGames) {
+      const summary = { file: g.file, game: g.game, date: g.date, players: g.players, win: g.win, color: g.color, moves: g.moves, acpl: g.acpl.decided, time: g.engine?.time, summary: g.summary.decided };
+      log.data('summary', summary); // one-line short summary
     }
   }
-  // log.data(games);
+  if (games.length === 1) log.data('details', games[0]); // full game details
 
-  engine.terminate();
-  process.exit(0);
+  engine.terminate(); // terminate stockfish engine
+  process.exit(0); // nodejs process can sometimes linger when using spawned processes
 }
 
 main();
