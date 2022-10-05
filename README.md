@@ -3,16 +3,55 @@
 `NodeJS` Chess Analysis using [Stockfish](https://github.com/official-stockfish/Stockfish) UCI Engine  
 *(Possibly compatible with other engines, but not tested)*
 
+*Note: Before using, download Stockfish UCI engine using links below*
 ## Sources
 
-- `src/uci.ts` handles starting of the engine and communication with it
-- `src/game.ts` uses engine to run move analysis and annotate results
-- `src/index.ts` short app that analyzes given game(s) in [PGN format](https://www.chess.com/terms/chess-pgn)
+- `src/uci.ts`  
+  handles starting of the engine and communication with it
+- `src/game.ts`
+  analyzes pgn  
+  generates and translates individual moves  
+  sends moves to engine and to be analyzed  
+  annotate results  
+- `src/index.ts`  
+  short app that analyzes given game(s) in [PGN format](https://www.chess.com/terms/chess-pgn)
 
 Sources are compiled to `dist/chess.js` using `@vladmandic/build` CI tool:
 > npm run prod
 
-## Usage
+### Example Code
+
+```js
+import * as UCI from './uci';
+import * as game from './game';
+
+const engine = new UCI.Engine(options); // create engine using options, see below for option details
+await engine.ready(); // wait until engine is ready
+const games = await game.analyze(engine, // analyze game using engine
+  pgnText, // game in pgn format sent to engine as string
+  'sample.pgn', // filename for annotation only
+  'me' // player name
+);
+console.log(games); // print full analyzed details
+engine.terminate(); // terminate engine
+```
+
+### Options
+
+```js
+const options = UCI.Options = { // all parameters are optional
+  debug: false, // log uci communication
+  lines: 1, // analyze n top lines
+  depth: 12, // max depth per move
+  maxTime: 2000, // max time per move in ms
+  maxScore: 10, // consider game as decided for purpose of statistics once score is reached
+  engine: '/home/vlado/dev/chess/engine/sf15-bmi2', // stockfish executable
+  nnue: 'nn-6877cd24400e.nnue', // nnue file with path local to stockfish binary
+  options: ['Threads value 16'], // additional options to pass to stockfish engine
+};
+```
+
+## Example Demo
 
 > npm start samples/sample-white.pgn
 

@@ -143,7 +143,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       move.best = best.moves[0]; // only interested first move from sequence
       game.line.push(move); // add move to game
       if (best.score.type === 'exact') {
-        scores.push(best.score.score);
+        scores.push((game.color === 'black' ? -1 : 1) * best.score.score); // add normalized score
       }
       if (best.score.type === 'mate') {
         scores.push(game.color?.startsWith(move.color) ? 99 : -99);
@@ -162,9 +162,6 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     }
     const t1 = process.hrtime.bigint();
     game.line.length = Math.min(game.line.length, nodes.length);
-    game.line.forEach((move) => move.score *= game.color === 'white' ? 1 : -1); // normalize scores depending which side is played
-    // game.line.forEach((move) => move.cpl *= game.color === 'white' ? 1 : 1); // normalize scores depending which side is played
-    // game.line.forEach((move) => move.flags = getFlags(move)); // normalize scores depending which side is played
     game.acpl = { full: getACPL(game, 0), decided: getACPL(game, 10) };
     game.summary = { full: getSummary(game, 0), decided: getSummary(game, 10) };
     if (game.engine) game.engine.time = Math.round(Number(t1 - t0) / 1000 / 1000);
