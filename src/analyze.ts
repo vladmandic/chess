@@ -1,17 +1,18 @@
-import { readFileSync } from 'fs';
+import * as fs from 'fs';
 import * as log from '@vladmandic/pilogger';
 import * as UCI from './uci';
 import * as game from './game';
 
 const playerName = 'VladMandic';
 
-const uciOptions: UCI.Options = {
+const uciOptions: Partial<UCI.Options> = {
   debug: false, // log uci communication
   lines: 1, // analyze n top lines
   depth: 12, // max depth per move
   maxTime: 2000, // max time per move in ms
   maxScore: 10, // consider game decided for purpose of statistics once score is reached
-  engine: '/home/vlado/dev/chess/engine/sf15-bmi2', // stockfish executable
+  engine: '/home/vlado/dev/chess/engine/stockfish/sf15-bmi2', // stockfish executable
+  // engine: '/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe',
   nnue: 'nn-6877cd24400e.nnue', // nnue file with path local to stockfish binary
   options: ['Threads value 16'], // additional options to pass to stockfish engine
 };
@@ -27,11 +28,16 @@ async function main() {
 
   const games: game.Game[] = [];
   const args = process.argv.slice(2); // all cli ars after process name
-  const globby = await import('globby'); // dynamic import as globby is esm
-  const files: string[] = await globby.globby(args, { expandDirectories: true, gitignore: true, deep: 2 });
+  let files: string[] = [];
+  if (args.length === 1 && fs.existsSync(args[0])) {
+    files.push(args[0]); // keep it simple just use file as-is
+  } else {
+    const globby = await import('globby'); // dynamic import as globby is esm
+    files = await globby.globby(args, { expandDirectories: true, gitignore: true, deep: 2 }); // find matching files
+  }
   log.info('list', { files: files.length });
   for (const fileName of files) {
-    const pgnText = readFileSync(fileName, 'utf8');
+    const pgnText = fs.readFileSync(fileName, 'utf8');
     // analyze game using specified engine and from perspecitive of a specific player
     const analyzedGames: game.Game[] = await game.analyze(engine, pgnText, fileName, playerName);
     games.push(...analyzedGames);

@@ -69,7 +69,7 @@ export class Engine {
   private ascii: string[] = [];
   name: string | undefined;
   info: string[] = [];
-  options: Options = { lines: 25, depth: 10, maxTime: 1000, engine: '', nnue: '', debug: false, maxScore: 10, options: [] };
+  options: Options = { lines: 1, depth: 10, maxTime: 0, engine: '', nnue: '', debug: false, maxScore: 10, options: [] };
   state: State;
 
   constructor(options: Partial<Options>) {
@@ -96,6 +96,7 @@ export class Engine {
     this.send('compiler');
     this.send('uci');
     this.send('setoption name UCI_AnalyseMode value true');
+    this.send('setoption name Ponder value false');
     if (this.options.nnue.length > 0) {
       this.send(`setoption name EvalFile value ${this.options.nnue}`);
       this.send('setoption name Use NNUE value true');
@@ -150,6 +151,10 @@ export class Engine {
     return this.lastFen;
   }
 
+  get validOptions() {
+    return this.engineOptions;
+  }
+
   set move(movesString: string) {
     this.send(`position startpos moves ${movesString}`);
     this.turn = movesString.split(' ').length % 2 ? 'black' : 'white';
@@ -167,7 +172,7 @@ export class Engine {
     if (this.options.depth > 0) this.send(`go depth ${this.options.depth}`);
     else this.send('go infinite');
     if (this.timeout) clearTimeout(this.timeout);
-    if (this.options.maxTime) this.timeout = setTimeout(() => this.stop(), this.options.maxTime);
+    if (this.options.maxTime && this.options.maxTime > 0) this.timeout = setTimeout(() => this.stop(), this.options.maxTime);
   }
 
   stop() {
@@ -229,7 +234,7 @@ export class Engine {
   }
 
   processInfo(line: string) {
-    if (line.indexOf(' score ') === -1 || line.indexOf(' depth ') === -1 || line.indexOf(' multipv ') === -1) return; // The line does not contain any analysis data. We will ignore it.
+    if (line.indexOf(' score ') === -1 || line.indexOf(' depth ') === -1) return; // The line does not contain any analysis data. We will ignore it.
     // Parse the depth of the stockfish output.
     const depthIndexBegin = line.indexOf(' depth ') + 7;
     const depthIndexEnd = line.indexOf(' ', depthIndexBegin);
@@ -237,7 +242,7 @@ export class Engine {
     // Parse the line number of the stockfish output.
     const lineNumberIndexBegin = line.indexOf(' multipv ') + 9;
     const lineNumberIndexEnd = line.indexOf(' ', lineNumberIndexBegin);
-    const lineNumber = +line.substring(lineNumberIndexBegin, lineNumberIndexEnd);
+    const lineNumber = +line.substring(lineNumberIndexBegin, lineNumberIndexEnd) || 1;
     // Parse the score of the stockfish output.
     const scoreTypeIndexBegin = line.indexOf(' score ') + 7;
     const scoreTypeIndexEnd = line.indexOf(' ', scoreTypeIndexBegin);

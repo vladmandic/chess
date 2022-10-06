@@ -1,25 +1,29 @@
 import * as log from '@vladmandic/pilogger';
-import { pgnRead } from 'kokopu';
+import * as pgn from 'kokopu';
+import { Opening, openings } from './openings';
 import type * as UCI from './uci';
 
 export type Color = 'white' | 'black';
 export class Move {
   i: number;
-  move: string;
+  ag: string;
+  desc: string;
   best: string = '';
   score: number = 0;
   cpl: number = 0;
   color: Color;
-  symbol: string;
+  figuring: string;
   fen: string;
   flags: string | undefined;
 
-  constructor(node?) {
+  constructor(node?: pgn.Node) {
     this.i = node ? node?.fullMoveNumber() : -1;
-    this.symbol = node?.figurineNotation();
-    this.move = `${node?._data.moveDescriptor.from()}${node?._data.moveDescriptor.to()}`; // eslint-disable-line no-underscore-dangle
+    this.figuring = node?.figurineNotation() || '';
+    this.ag = node?.notation() || '';
+    // @ts-ignore _data is private
+    this.desc = `${node?._data.moveDescriptor.from()}${node?._data.moveDescriptor.to()}`; // eslint-disable-line no-underscore-dangle
     this.color = node?.moveColor() === 'w' ? 'white' : 'black';
-    this.fen = node?.position().fen();
+    this.fen = node?.position().fen() || '';
   }
 }
 
@@ -49,6 +53,7 @@ export class Game {
   pgn: string[] = [];
   engine: EngineInfo | undefined;
   summary: { full: Summary | undefined, decided: Summary | undefined } = { full: undefined, decided: undefined };
+  openings: { eco: string, name: string }[] = [];
 
   constructor(data?: Partial<Game>) {
     this.analyzed = new Date();
@@ -75,7 +80,7 @@ const getACPL = (game: Game, cuttoffScore?: number): number | undefined => {
 const getFlags = (move: Move) => {
   if (move.flags) return move.flags;
   // if (Math.abs(move.score) > 10) return undefined;
-  if (move.move === move.best) return 'best';
+  if (move.desc === move.best) return 'best';
   if (move.cpl >= 2.0) return 'blunder';
   if (move.cpl >= 1.0) return 'mistake';
   if (move.cpl >= 0.5) return 'inaccurate';
@@ -98,12 +103,32 @@ const getSummary = (game: Game, cuttoffScore?: number): Summary | undefined => {
   };
 };
 
+export const getOpening = (moves: string[]) => {
+  const arrayStartsWith = (a: string[], b: string[]): boolean => {
+    if (b.length < a.length) return false;
+    let assume = true;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        assume = false;
+        break;
+      }
+    }
+    return assume;
+  };
+
+  const possible: Opening[] = openings.filter((opening) => arrayStartsWith(moves, opening.moves));
+  const best: Opening[] = possible.filter((opening) => opening.moves.length === moves.length);
+  if (best.length > 0) return best.map((opening) => ({ eco: opening.eco, name: opening.name, halfmoves: moves.length }));
+  // if (possible.length > 0 && (moves.length > 2)) return possible.map((opening) => ({ eco: opening.eco, name: opening.name }));
+  return [];
+};
+
 export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: string, playerName?): Promise<Game[]> {
-  const database = pgnRead(pgnText);
+  const database: pgn.Database = pgn.pgnRead(pgnText);
   const games: Game[] = [];
   for (let i = 0; i < database.gameCount(); i++) { // pgn can contain multiple games
     const t0 = process.hrtime.bigint();
-    let pgnGame;
+    let pgnGame: pgn.Game;
     try {
       pgnGame = database.game(i);
     } catch (err) {
@@ -115,7 +140,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     if (players[0] === playerName) color = 'white';
     if (players[1] === playerName) color = 'black';
     const variation = pgnGame.mainVariation(); // game can have multiple variations but we only look at played variation
-    const nodes = variation.nodes(); // array of moves
+    const nodes: pgn.Node[] = variation.nodes(); // array of moves
     const game = new Game({
       file: pgnFile,
       game: i + 1,
@@ -132,8 +157,11 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     await engine.reset(); // reset engine
     let previous: Move = new Move();
     const scores: number[] = [];
+    const agMoves: string[] = [];
     for (let j = 0; j <= nodes.length; j++) { // analyze all moves
       const move = new Move(nodes[j]); // create played move
+      agMoves.push(move.ag);
+      if (j < 14) game.openings.push(...getOpening(agMoves));
       const res: UCI.Analysis = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
       if (!res || !res.depth || !res.lines || res.lines.length === 0) {
         log.warn('sf engine return no move', { current: move, previous, fen: engine.fen, res });

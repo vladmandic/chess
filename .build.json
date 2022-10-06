@@ -39,9 +39,14 @@
     },
     "targets": [
       {
-        "name": "application",
-        "input": "src/index.ts",
-        "output": "dist/chess.js"
+        "name": "analyze",
+        "input": "src/analyze.ts",
+        "output": "dist/analyze.js"
+      },
+      {
+        "name": "battle",
+        "input": "src/battle.ts",
+        "output": "dist/battle.js"
       }
     ]
   },
