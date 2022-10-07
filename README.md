@@ -1,23 +1,29 @@
-# Chess
+# Chess Engine Battles & Analysis
 
-`NodeJS` Chess Battles & Analysis using  UCI Engine
+Written in **TypeScript**, using **UCI Engine** and managed from **NodeJS**
 
-*Note: Before using, download one more engines using links below*
-*Tested using Stockfish and LCZero, but likely compatibile with other UCI chess engines
+Tested using [Stockfish](https://stockfishchess.org/) and [LCZero](https://lczero.org/), but likely compatibile with other UCI chess engines  
+*Note: Before using, download one more engines using links below*  
+
 ## Apps
 
-- `src/analyze.ts` => `dist/analyze.js`   
-  app that analyzes given game(s) in [PGN format](https://www.chess.com/terms/chess-pgn)  
-  *run:*
+### Analyze
+
   > npm run analyze sample/sample-white.pgn
 
-- `src/battle.ts` => `dist/battle.js`  
-  app that pairs two engines against each other and generates a game [PGN](https://www.chess.com/terms/chess-pgn)  
-  *run:*
+  Runs every move through the chess engine
+  Generates per-move centipawn loss, average centipawn loss, looks up openings according to ECO database, finds missed mates, notes mistakes/blunders/etc.  
+  Can be used to analyze single game or run in batch
+
+### Battle
+
   > npm run battle
 
-Note: all sources are compiled using `@vladmandic/build` CI tool
-> npm run prod
+  Initializes two UCI engines given specific options and runs number of simulated gam from either default or given position  
+  Looks up openings used according to ECO database and further annotates games as they are played  
+  Generates final output in [PGN format](https://www.chess.com/terms/chess-pgn)  
+
+<br>
 
 ### Code
 
@@ -30,6 +36,15 @@ Note: all sources are compiled using `@vladmandic/build` CI tool
   annotate results  
 - `src/openings.ts`  
   library of game openings  
+- `src/battle.ts` => `dist/battle.js`  
+  app that pairs two engines against each other and generates a game [PGN](https://www.chess.com/terms/chess-pgn)  
+  *run:*
+- `src/analyze.ts` => `dist/analyze.js`   
+  app that analyzes given game(s) in [PGN format](https://www.chess.com/terms/chess-pgn)  
+  *run:*
+
+Note: all sources are compiled using `@vladmandic/build` CI tool
+> npm run prod
 
 <br>
 

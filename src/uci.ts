@@ -172,7 +172,7 @@ export class Engine {
     if (this.options.depth > 0) this.send(`go depth ${this.options.depth}`);
     else this.send('go infinite');
     if (this.timeout) clearTimeout(this.timeout);
-    if (this.options.maxTime && this.options.maxTime > 0) this.timeout = setTimeout(() => this.stop(), this.options.maxTime);
+    if (this.options.maxTime && this.options.maxTime > 0) this.timeout = setTimeout(() => this.send('stop'), this.options.maxTime);
   }
 
   stop() {
