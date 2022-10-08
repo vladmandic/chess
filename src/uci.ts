@@ -11,11 +11,12 @@ export interface Options {
   maxTime: number;
   engine: string;
   nnue: string;
+  syzygy: string;
   maxScore: number;
   options: string[];
 }
 
-export type ScoreType = 'exact' | 'mate' | 'lowerbound' | 'upperbound' | 'notfound';
+export type ScoreType = 'cp' | 'mate' | 'lowerbound' | 'upperbound' | 'notfound' | 'syzygy';
 
 export interface UCIResult {
   name: string, info: string[], options: Options | undefined, time: number
@@ -32,7 +33,8 @@ export class Score {
 
   toString() {
     switch (this.type) {
-      case 'exact': return this.score;
+      case 'cp': return this.score;
+      case 'syzygy': return `solved score ${this.score}`;
       case 'mate': return `mate in ${this.score}`;
       case 'lowerbound': return `>= ${this.score}`;
       case 'upperbound': return `<= ${this.score}`;
@@ -43,8 +45,9 @@ export class Score {
 
 export interface Line {
   score: Score,
-  cpl: number,
   moves: string[],
+  nodes: number,
+  tb: number,
 }
 
 export interface Analysis {
@@ -67,9 +70,10 @@ export class Engine {
   private duration = 0;
   private lastFen: string = '';
   private ascii: string[] = [];
+  syzygy: { wdl: string | undefined, dtz: number | undefined } = { wdl: undefined, dtz: undefined };
   name: string | undefined;
   info: string[] = [];
-  options: Options = { lines: 1, depth: 10, maxTime: 0, engine: '', nnue: '', debug: false, maxScore: 10, options: [] };
+  options: Options = { lines: 1, depth: 10, maxTime: 0, engine: '', nnue: '', syzygy: '', debug: false, maxScore: 10, options: [] };
   state: State;
 
   constructor(options: Partial<Options>) {
@@ -78,6 +82,7 @@ export class Engine {
     if (options?.maxTime) this.options.maxTime = options.maxTime;
     if (options?.debug) this.options.debug = options.debug;
     if (options?.engine) this.options.engine = options.engine;
+    if (options?.syzygy) this.options.syzygy = options.syzygy;
     if (options?.nnue) this.options.nnue = options.nnue;
     if (options?.options) this.options.options = options.options;
 
@@ -105,6 +110,9 @@ export class Engine {
     }
     for (const option of this.options.options) {
       this.send(`setoption name ${option}`);
+    }
+    if (this.options.syzygy.length > 0) {
+      this.send(`setoption name SyzygyPath value ${this.options.syzygy}`);
     }
     this.send('go depth 1'); // to capture initial engine output
     this.send('stop');
@@ -182,7 +190,9 @@ export class Engine {
 
   async board(): Promise<string> {
     this.ascii = [];
+    this.state = 'busy';
     this.send('d');
+    this.send('isready');
     await this.ready();
     return this.ascii.join('\n');
   }
@@ -194,6 +204,13 @@ export class Engine {
     return this.best;
   }
 
+  async solve(): Promise<{ wdl: string, dtz?: number } | undefined> {
+    await this.board();
+    const res = this.syzygy.wdl ? { wdl: this.syzygy.wdl || '' } : undefined;
+    if (this.syzygy.dtz && res) res['dtz'] = this.syzygy.dtz;
+    return res;
+  }
+
   process(chunk: string) {
     const lines = chunk
       .split('\n')
@@ -203,13 +220,13 @@ export class Engine {
       if (line.startsWith('id name')) this.name = line.replace('id name ', '');
       if (line.startsWith('option')) this.engineOptions.push(line.replace('option name ', ''));
       if (line.startsWith('uciok')) this.state = 'started';
-      if (line.startsWith('readyok') || line.startsWith('bestmove')) {
+      if (line.startsWith('readyok') || line.startsWith('bestmove') || line.startsWith('error')) {
         this.duration = Number((process.hrtime.bigint() - this.startTime) / 1000n / 1000n);
         this.state = 'ready';
       }
       if (this.state !== 'ready' && this.state !== 'busy') continue;
       if (line.startsWith('info')) {
-        if (line.includes('pv')) {
+        if (line.includes(' pv ')) {
           this.processInfo(line);
         } else if (line.includes('mate 0') || line.includes('cp 0')) {
           this.noMoves = true;
@@ -222,6 +239,9 @@ export class Engine {
           log.data('sf unknown line', { line });
         }
       }
+      if (line.startsWith('Tablebases')) {
+        this.processSolve(line);
+      }
       if (line.startsWith('|' || line.startsWith('+'))) {
         const l = line.replace(/[1-8,|]/g, '');
         this.ascii.push(l);
@@ -233,53 +253,53 @@ export class Engine {
     }
   }
 
-  processInfo(line: string) {
-    if (line.indexOf(' score ') === -1 || line.indexOf(' depth ') === -1) return; // The line does not contain any analysis data. We will ignore it.
+  processSolve(infoLine: string) {
+    const words = infoLine.split(' ').map((word) => word.trim()).filter((word) => word);
+    const idx = (s) => words.findIndex((w) => w === s) + 1;
+    const str = (s) => (idx(s) > 0 ? words[idx(s)] : undefined);
+    const num = (s) => Number(str(s));
+    const wdl = str('WDL:');
+    const dtz = num('DTZ:');
+    if (wdl) this.syzygy.wdl = wdl;
+    if (dtz) this.syzygy.dtz = dtz;
+  }
+
+  processInfo(infoLine: string) {
+    if (infoLine.indexOf(' score ') === -1 || infoLine.indexOf(' depth ') === -1) return; // The line does not contain any analysis data. We will ignore it.
+    const words = infoLine.split(' ').map((word) => word.trim());
+    const idx = (s) => words.findIndex((w) => w === s) + 1;
+    const str = (s) => words[idx(s)];
+    const num = (s) => Number(str(s));
     // Parse the depth of the stockfish output.
-    const depthIndexBegin = line.indexOf(' depth ') + 7;
-    const depthIndexEnd = line.indexOf(' ', depthIndexBegin);
-    const depth = +line.substring(depthIndexBegin, depthIndexEnd);
-    // Parse the line number of the stockfish output.
-    const lineNumberIndexBegin = line.indexOf(' multipv ') + 9;
-    const lineNumberIndexEnd = line.indexOf(' ', lineNumberIndexBegin);
-    const lineNumber = +line.substring(lineNumberIndexBegin, lineNumberIndexEnd) || 1;
+    const depth = num('seldepth') || num('depth') || 0;
+    const pv = num('multipv') || 1;
+    const tb = num('tbhits') || 0;
+    const nodes = num('nodes') || 0;
+    const scoreType = str('score') as ScoreType;
+    const scoreVal = Number(words[idx('score') + 1]) || 0;
     // Parse the score of the stockfish output.
-    const scoreTypeIndexBegin = line.indexOf(' score ') + 7;
-    const scoreTypeIndexEnd = line.indexOf(' ', scoreTypeIndexBegin);
-    const scoreType = line.substring(scoreTypeIndexBegin, scoreTypeIndexEnd);
-    const scoreIndexBegin = scoreTypeIndexEnd + 1;
-    const scoreIndexEnd = line.indexOf(' ', scoreIndexBegin);
-    let score: Score;
-    if (scoreType === 'cp') {
-      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'exact');
-    } else if (scoreType === 'mate') {
-      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd), 'mate');
-    } else if (scoreType === 'lowerbound') {
-      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'lowerbound');
-    } else if (scoreType === 'upperbound') {
-      score = new Score(+line.substring(scoreIndexBegin, scoreIndexEnd) / 100, 'upperbound');
-    } else {
-      log.data('sf unknown score', { scoreType });
-      return;
+    let score: Score | undefined;
+    switch (scoreType) {
+      case 'cp': score = new Score(scoreVal / 100, 'cp'); break;
+      case 'lowerbound': score = new Score(scoreVal / 100, 'lowerbound'); break;
+      case 'upperbound': score = new Score(scoreVal / 100, 'upperbound'); break;
+      case 'mate': score = new Score(scoreVal, 'mate'); break;
+      default: log.data('sf unknown score', { scoreType });
     }
-    if (this.turn === 'black') score.score *= -1; // Convert the score to white's perspective.
-    // Parse the moves of the stockfish output.
-    const movesIndexBegin = line.indexOf(' pv ') + 4;
-    const moves = line.substring(movesIndexBegin).split(' ');
-    // Add the line to the best lines.
-    if (!this.lines.has(depth)) this.lines.set(depth, []);
-    const linesOfdepth = this.lines.get(depth) || [];
-    const bestScore = linesOfdepth[0]?.score?.score || 0;
-    const cpl = Math.round(100 * (score.score - bestScore)) / 100;
-    linesOfdepth[lineNumber - 1] = { score, moves, cpl };
-    const numLinesOfdepth = linesOfdepth?.filter((l) => l !== null).length;
-    const analysisComplete = numLinesOfdepth === this.options.lines || depth > 1 && numLinesOfdepth === this.lines.get(1)?.length;
-    if (analysisComplete && depth > this.depth) this.depth = depth;
+    if (!score) return;
+    if (this.turn === 'black') score.score *= -1;
+    const moves = words.slice(idx('pv'));
+    const line: Line = { score, moves, nodes, tb };
+    const lines: Line[] = this.lines.get(depth) || new Array(this.options.lines);
+    lines[pv - 1] = line;
+    this.lines.set(depth, lines);
+    if (depth > this.depth) this.depth = depth;
   }
 
   get best(): Analysis {
-    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, cpl: 0, moves: [] }] };
-    return { depth: this.depth, time: this.duration, lines: this.lines.get(this.depth) || [] };
+    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, nodes: 0, tb: 0, moves: [] }] };
+    const lines = this.lines.get(this.depth) || [];
+    return { depth: this.depth, time: this.duration, lines: lines.filter((line) => line) };
   }
 
   send(str: string) {

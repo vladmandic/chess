@@ -170,7 +170,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       const best: UCI.Line = res.lines[0];
       move.best = best.moves[0]; // only interested first move from sequence
       game.line.push(move); // add move to game
-      if (best.score.type === 'exact') {
+      if (best.score.type === 'cp') {
         scores.push((game.color === 'black' ? -1 : 1) * best.score.score); // add normalized score
       }
       if (best.score.type === 'mate') {

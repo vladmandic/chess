@@ -13,6 +13,7 @@ Tested using [Stockfish](https://stockfishchess.org/) and [LCZero](https://lczer
 
   Runs every move through the chess engine
   Generates per-move centipawn loss, average centipawn loss, looks up openings according to ECO database, finds missed mates, notes mistakes/blunders/etc.  
+  Optionally looks up Syzygy end-game tablebases  
   Can be used to analyze single game or run in batch
 
 ### Battle
@@ -21,6 +22,7 @@ Tested using [Stockfish](https://stockfishchess.org/) and [LCZero](https://lczer
 
   Initializes two UCI engines given specific options and runs number of simulated gam from either default or given position  
   Looks up openings used according to ECO database and further annotates games as they are played  
+  Optionally looks up Syzygy end-game tablebases  
   Generates final output in [PGN format](https://www.chess.com/terms/chess-pgn)  
 
 <br>
@@ -60,3 +62,9 @@ Note: all sources are compiled using `@vladmandic/build` CI tool
 - [Leela Chess Zero Sources](https://github.com/LeelaChessZero/lc0)
 - [ECO Openings Codes Table](https://www.chessjournal.com/eco/)
 - [What is NNUE](https://www.chessprogramming.org/NNUE)
+- [Syzygy endgame tablebases](https://syzygy-tables.info/)
+
+## Todo
+
+More UCI Engines:
+- <https://github.com/jhonnold/berserk>
