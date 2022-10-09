@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import * as fs from 'fs';
 
 export interface Opening {
   eco: string,
@@ -25,8 +25,8 @@ const arrayStartsWith = (a: string[], b: string[]): boolean => {
   return assume;
 };
 
-const initOpenings = () => {
-  const text = readFileSync('src/openings.json', 'utf8');
+export const initOpenings = (openingsFile = 'src/openings.json') => {
+  const text = fs.readFileSync(openingsFile, 'utf8');
   openings = JSON.parse(text);
   openings.forEach((opening) => opening.uciMoves = opening.uci?.split(' ') || []);
   openings.forEach((opening) => opening.agMoves = opening.pgn?.replace(/[0-9]?[0-9]\. /g, '').split(' ') || []);

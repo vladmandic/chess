@@ -4,8 +4,9 @@
   "solvedDepth": 4,
   "initialFEN": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
   "pgnOutput": "samples/battle.pgn",
+  "openings": "src/openings.json",
   "engineOptions": [
     { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "/home/vlado/dev/chess/engine/syzygy" },
-    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "nn-6877cd24400e.nnue" }
+    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "berserk-c982d9682d4e.nn" }
   ]
 }

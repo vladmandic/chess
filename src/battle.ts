@@ -1,8 +1,8 @@
-import { readFileSync, writeFileSync } from 'fs';
+import * as fs from 'fs';
 import * as log from '@vladmandic/pilogger';
 import * as k from 'kokopu';
 import * as UCI from './uci';
-import { getOpeningUCI } from './openings';
+import { initOpenings, getOpeningUCI } from './openings';
 
 interface Config {
   maxMoves?: number,
@@ -10,7 +10,13 @@ interface Config {
   solvedDepth?: number,
   initialFEN?: string,
   pgnOutput?: string,
+  openings?: string,
   engineOptions: Partial<UCI.Options>,
+  /*
+    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "/home/vlado/dev/chess/engine/syzygy" },
+    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "nn-6877cd24400e.nnue" }
+    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe" },
+  */
 }
 
 let config: Config;
@@ -155,9 +161,11 @@ async function main() {
 
   const configFile = process.argv[2] || 'battle.json';
   log.info({ configFile });
-  const configText = readFileSync(configFile, 'utf-8');
+  const configText = fs.readFileSync(configFile, 'utf-8');
   config = JSON.parse(configText) as Config;
   log.info('config', config);
+
+  initOpenings(config.openings);
 
   const ew: UCI.Engine = new UCI.Engine(config.engineOptions[0]); // engine white
   await ew.ready();
@@ -173,7 +181,7 @@ async function main() {
     pgn += k.pgnWrite(game) + '\n';
   }
   if (config.pgnOutput) {
-    writeFileSync(config.pgnOutput, pgn, 'utf-8');
+    fs.writeFileSync(config.pgnOutput, pgn, 'utf-8');
     log.data('pgn', { file: config.pgnOutput }, `\n${pgn}`);
   } else {
     log.data('pgn', `\n${pgn}`);
@@ -185,9 +193,3 @@ async function main() {
 }
 
 main();
-
-/*
-  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "/home/vlado/dev/chess/engine/syzygy" },
-  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "nn-6877cd24400e.nnue" }
-  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe" },
-*/

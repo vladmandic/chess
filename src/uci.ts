@@ -1,6 +1,6 @@
+import * as fs from 'fs';
 import * as log from '@vladmandic/pilogger';
 import { spawn, ChildProcess } from 'child_process';
-import { existsSync, statSync } from 'fs';
 
 export type State = 'starting' | 'started' | 'stopping' | 'ready' | 'busy' | 'terminated';
 
@@ -87,8 +87,8 @@ export class Engine {
     if (options?.nnue) this.options.nnue = options.nnue;
     if (options?.options) this.options.options = options.options;
 
-    if (!existsSync(this.options.engine)) throw new Error(`uci: engine not found: ${this.options.engine}`);
-    if (!statSync(this.options.engine).isFile()) throw new Error(`uci: engine not valid: ${this.options.engine}`);
+    if (!fs.existsSync(this.options.engine)) throw new Error(`uci: engine not found: ${this.options.engine}`);
+    if (!fs.statSync(this.options.engine).isFile()) throw new Error(`uci: engine not valid: ${this.options.engine}`);
     this.instance = spawn(this.options.engine);
     this.buffer = Buffer.alloc(0); // Initialise the output buffer.
     this.instance.stdout?.on('data', (chunk: Buffer) => { // Handle the output of the Stockfish process.

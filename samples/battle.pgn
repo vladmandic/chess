@@ -9,26 +9,24 @@
 [WhiteOptions "depth:100 maxtime:25"]
 [BlackOptions "depth:100 maxtime:25"]
 [FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
-[ECO "B12"]
-[Opening "Caro-Kann Defense: Advance Variation"]
+[ECO "B90"]
+[Opening "Sicilian Defense: Najdorf Variation, English Attack"]
 [Termination "3-fold repetition"]
-[WhiteTime "2184 ms"]
-[BlackTime "2363 ms"]
+[WhiteTime "1854 ms"]
+[BlackTime "2042 ms"]
 
-1. e4 c6 2. d4 d5 3. e5 Bf5 4. Be2 e6 5. Nf3 c5 6. c3 Nc6 7. O-O Bg6 8. Be3 cxd4
-9. cxd4 Nge7 10. Nh4 Nf5 11. Nxf5 Bxf5 12. g4 Bg6 13. f4 f5 14. Nc3 Bb4 15. Qb3
-Qd7 16. g5 h6 17. Nb5 hxg5 18. fxg5 a6 19. a3 axb5 20. axb4 Rxa1 21. Rxa1 O-O
-22. Qd3 Qe7 23. Bd2 Kh7 24. h4 Qf7 25. Qc3 Rc8 26. Qe3 f4 27. Qf2 f3 28. Bxf3
-Nxd4 29. Bd1 Nf5 30. Rc1 Rc4 31. Rxc4 bxc4 32. Bg4 Kg8 33. Bc3 Kh7 34. Kh2 Kh8
-35. b5 Bh5 36. Bxf5 Bg4 37. Bd4 Bxf5 38. Qf3 Qg6 39. Kg3 Be4 40. Qg4 Qf7 41. h5
-Qf1 42. Qf4 Qg2+ 43. Kh4 Qh1+ 44. Kg3 Qg2+ 45. Kh4 Qh1+ 46. Kg3 Qxh5 47. Qh4
-Qxh4+ 48. Kxh4 Kh7 49. Kg4 Kg6 50. Bc5 Bc2 51. b6 Bf5+ 52. Kf4 Kh5 53. Bf8 g6
-54. Bc5 Bd3 55. Bf2 Be4 56. Bd4 Kh4 57. Bc5 Bf5 58. Bf2+ Kh3 59. Bc5 Bd3 60. Bd4
-Kh4 61. Bf2+ Kh5 62. Bc5 Kh4 63. Bf2+ Kh3 64. Bd4 Be4 65. Bc5 Bc2 66. Bg1 Bf5
-67. Bc5 Kg2 68. Bd4 Bb1 69. Bc5 Be4 70. Bd4 Bf5 71. Bc5 Bc2 72. Bd4 Bb1 73. Bc5
-Be4 74. Bd4 Kh3 75. Bc5 Bf5 76. Bd4 Kh4 77. Bf2+ Kh5 78. Bc5 Kh4 79. Bf2+ Kh5
-80. Bc5 Kh4 81. Bd4 Bc2 82. Bf2+ Kh3 83. Bg1 Bf5 84. Bc5 Be4 85. Bf2 Bh1 86. Bc5
-Be4 87. Be3 Bc2 88. Bg1 Bf5 89. Bf2 Kg2 90. Bc5 Be4 91. Bd4 Bf5 92. Bc5 Bc2 93.
-Bd4 Ba4 94. Bc5 Bc6 95. Bd4 Ba4 96. Bc5 Bd1 97. Bd4 Bf3 98. Be3 Bd1 99. Bc5 Bc2
-100. Bd4 Bf5 101. Bc5 1/2-1/2
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be7 8. Be2
+Be6 9. g4 h6 10. Rg1 Nc6 11. Qd2 a5 12. a4 d5 13. exd5 Nxd5 14. Nxd5 Qxd5 15.
+Qxd5 Bxd5 16. O-O-O Bxb3 17. cxb3 Rd8 18. Kb1 Bb4 19. Bb6 Rxd1+ 20. Rxd1 Ke7 21.
+Rc1 f6 22. Bf3 Kd7 23. h4 g6 24. h5 gxh5 25. gxh5 f5 26. Rg1 e4 27. Be2 Ne5 28.
+Bd4 Kd6 29. f4 exf3 30. Bxf3 Rh7 31. Bg2 f4 32. Rd1 f3 33. Bxe5+ Kxe5 34. Bxf3
+Rf7 35. Bg2 b6 36. Rd5+ Kf4 37. Rb5 Rg7 38. Bc6 Rg1+ 39. Kc2 Rg5 40. Rxg5 Kxg5
+41. Be8 Kf6 42. Bg6 Ke5 43. Bd3 Bc5 44. b4 Bxb4 45. Bf1 Be7 46. b4 Kf6 47. Kc3
+Kg7 48. Bc4 Bh4 49. Bf1 Be1+ 50. Kb3 Kf7 51. Bd3 Bxb4 52. Bc2 Ke7 53. Bb1 Kf8
+54. Kc2 Kg8 55. Kd1 Kf7 56. Bg6+ Ke7 57. Bb1 b5 58. Kc2 bxa4 59. Kb2 Kd7 60. Bc2
+a3+ 61. Ka2 Kc7 62. Bh7 Bf8 63. Bd3 Kd7 64. Be2 Bb4 65. Bd1 Ke7 66. Bc2 Kf8 67.
+Bb1 Kg8 68. Bc2 Kf8 69. Bb1 Kf7 70. Bh7 Kg7 71. Bb1 Kg8 72. Bc2 Kh8 73. Bb1 Bf8
+74. Bc2 Kg8 75. Bd3 Kh8 76. Bg6 Bb4 77. Bb1 Kg7 78. Bc2 Kg8 79. Bb1 Kg7 80. Bc2
+Kh8 81. Bb1 Kg8 82. Bc2 Bd6 83. Bg6 Kg7 84. Bb1 Kf7 85. Bc2 Kg7 86. Bd1 Bb4 87.
+Bc2 Bc5 88. Bb1 Bb4 89. Bc2 1/2-1/2
 

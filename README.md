@@ -36,8 +36,8 @@ Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.o
   generates and translates individual moves  
   sends moves to engine and to be analyzed  
   annotate results  
-- `src/openings.ts`  
-  library of game openings  
+- `src/generate-openings.js`  
+  downloads latest eco openings and generates `openings.json`
 - `src/battle.ts` => `dist/battle.js`  
   app that pairs two engines against each other and generates a game [PGN](https://www.chess.com/terms/chess-pgn)  
   *run:*
@@ -55,18 +55,11 @@ Note: all sources are compiled using `@vladmandic/build` CI tool
 - [UCI Commands for Stockfish](docs/uci-stockfish.md)
 - [UCI Options for Stockfish and LCZero](docs/uci-options.md)
 - [PGN Format Specification](docs/pgn-specs.md)
+- [ECO Chess Openings](https://github.com/lichess-org/chess-openings)
 
 ## Links
 - [Stockfish Binaries](https://stockfishchess.org/download/)
 - [Stockfish Sources](https://github.com/official-stockfish/Stockfish)
 - [Leela Chess Zero Binaries](https://lczero.org/play/download/)
 - [Leela Chess Zero Sources](https://github.com/LeelaChessZero/lc0)
-- [ECO Openings Codes Table](https://www.chessjournal.com/eco/)
-- [What is NNUE](https://www.chessprogramming.org/NNUE)
 - [Syzygy endgame tablebases](https://syzygy-tables.info/)
-- [Chess Openings](https://github.com/lichess-org/chess-openings)
-
-## Todo
-
-More UCI Engines:
-- <https://github.com/jhonnold/berserk>
