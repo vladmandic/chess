@@ -37,8 +37,8 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
   game.playerName('b', eb.name?.toLocaleLowerCase());
   game.annotator('https://github.com/vladmandic/chess');
   game.site('https://github.com/vladmandic/chess');
-  game.tag('WhiteOptions', `depth:${ew.options.depth} maxtime:${ew.options.maxTime}`);
-  game.tag('BlackOptions', `depth:${eb.options.depth} maxtime:${eb.options.maxTime}`);
+  game.playerTitle('w', `depth:${ew.options.depth} maxtime:${ew.options.maxTime}`);
+  game.playerTitle('b', `depth:${eb.options.depth} maxtime:${eb.options.maxTime}`);
   game.round(round.toString());
   game.result('*');
 
@@ -53,7 +53,6 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
   let side: k.Color = config.initialFEN.split(' ')[1] as k.Color || 'w';
   position.fen(config.initialFEN);
 
-  game.tag('FEN', position.fen());
   log.info('starting game', { round, side, fen: position.fen() });
   let fen = position.fen();
 
@@ -98,8 +97,8 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
     const opening = getOpeningUCI(moves);
     if (opening) {
       move.opening = { eco: opening.eco, name: opening.name };
-      game.tag('ECO', opening.eco);
-      game.tag('Opening', opening.name);
+      game.eco(opening.eco);
+      game.opening(opening.name);
     }
 
     const repetitions = fens.filter((f) => f === move.fen).length;
@@ -124,25 +123,25 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
     }
     if (position.isCheckmate()) {
       game.result(position.turn() === 'w' ? '0-1' : '1-0');
-      game.tag('Termination', (position.turn() === 'w' ? 'Black' : 'White') + ' wins');
+      game.termination((position.turn() === 'w' ? 'Black' : 'White') + ' wins');
       break;
     }
     if (position.isStalemate()) {
-      game.tag('Termination', 'Stalemate');
+      game.termination('Stalemate');
       game.result('1/2-1/2');
       break;
     }
     if (position.isInsufficientMaterial()) {
-      game.tag('Termination', 'Insufficient material');
+      game.termination('Insufficient material');
       game.result('1/2-1/2');
       break;
     }
     if (config.maxMoves && line.fullMoveNumber() >= config.maxMoves) {
-      game.tag('Termination', 'Maxmimum moves reached');
+      game.termination('Maxmimum moves reached');
       break;
     }
     if (repetitions >= 3) {
-      game.tag('Termination', '3-fold repetition');
+      game.termination('3-fold repetition');
       game.result('1/2-1/2');
       break;
     }
@@ -150,8 +149,9 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
     side = side === 'w' ? 'b' : 'w';
     position.turn(side);
   }
-  game.tag('WhiteTime', `${time[0]} ms`);
-  game.tag('BlackTime', `${time[1]} ms`);
+
+  game.playerTitle('w', game.playerTitle('w') + ` usedTime: ${time[0]} ms`);
+  game.playerTitle('b', game.playerTitle('b') + ` usedTime: ${time[1]} ms`);
   return game;
 }
 
@@ -178,7 +178,7 @@ async function main() {
   if (!config.numGames) config.numGames = 1;
   for (let i = 1; i <= config.numGames; i++) {
     const game = await playGame(ew, eb, i);
-    pgn += k.pgnWrite(game) + '\n';
+    pgn += k.pgnWrite(game, { withPlyCount: true }) + '\n';
   }
   if (config.pgnOutput) {
     fs.writeFileSync(config.pgnOutput, pgn, 'utf-8');

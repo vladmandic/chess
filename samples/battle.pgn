@@ -4,29 +4,22 @@
 [Round "1"]
 [White "stockfish 15"]
 [Black "berserk 10"]
-[Result "1/2-1/2"]
+[Result "1-0"]
 [Annotator "https://github.com/vladmandic/chess"]
-[WhiteOptions "depth:100 maxtime:25"]
-[BlackOptions "depth:100 maxtime:25"]
-[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
-[ECO "B90"]
-[Opening "Sicilian Defense: Najdorf Variation, English Attack"]
-[Termination "3-fold repetition"]
-[WhiteTime "1854 ms"]
-[BlackTime "2042 ms"]
+[BlackTitle "depth:100 maxtime:25 usedTime: 1178 ms"]
+[ECO "B40"]
+[Opening "Sicilian Defense: French Variation"]
+[PlyCount "107"]
+[Termination "White wins"]
+[WhiteTitle "depth:100 maxtime:25 usedTime: 1184 ms"]
 
-1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be7 8. Be2
-Be6 9. g4 h6 10. Rg1 Nc6 11. Qd2 a5 12. a4 d5 13. exd5 Nxd5 14. Nxd5 Qxd5 15.
-Qxd5 Bxd5 16. O-O-O Bxb3 17. cxb3 Rd8 18. Kb1 Bb4 19. Bb6 Rxd1+ 20. Rxd1 Ke7 21.
-Rc1 f6 22. Bf3 Kd7 23. h4 g6 24. h5 gxh5 25. gxh5 f5 26. Rg1 e4 27. Be2 Ne5 28.
-Bd4 Kd6 29. f4 exf3 30. Bxf3 Rh7 31. Bg2 f4 32. Rd1 f3 33. Bxe5+ Kxe5 34. Bxf3
-Rf7 35. Bg2 b6 36. Rd5+ Kf4 37. Rb5 Rg7 38. Bc6 Rg1+ 39. Kc2 Rg5 40. Rxg5 Kxg5
-41. Be8 Kf6 42. Bg6 Ke5 43. Bd3 Bc5 44. b4 Bxb4 45. Bf1 Be7 46. b4 Kf6 47. Kc3
-Kg7 48. Bc4 Bh4 49. Bf1 Be1+ 50. Kb3 Kf7 51. Bd3 Bxb4 52. Bc2 Ke7 53. Bb1 Kf8
-54. Kc2 Kg8 55. Kd1 Kf7 56. Bg6+ Ke7 57. Bb1 b5 58. Kc2 bxa4 59. Kb2 Kd7 60. Bc2
-a3+ 61. Ka2 Kc7 62. Bh7 Bf8 63. Bd3 Kd7 64. Be2 Bb4 65. Bd1 Ke7 66. Bc2 Kf8 67.
-Bb1 Kg8 68. Bc2 Kf8 69. Bb1 Kf7 70. Bh7 Kg7 71. Bb1 Kg8 72. Bc2 Kh8 73. Bb1 Bf8
-74. Bc2 Kg8 75. Bd3 Kh8 76. Bg6 Bb4 77. Bb1 Kg7 78. Bc2 Kg8 79. Bb1 Kg7 80. Bc2
-Kh8 81. Bb1 Kg8 82. Bc2 Bd6 83. Bg6 Kg7 84. Bb1 Kf7 85. Bc2 Kg7 86. Bd1 Bb4 87.
-Bc2 Bc5 88. Bb1 Bb4 89. Bc2 1/2-1/2
+1. e4 c5 2. Nf3 e6 3. Nc3 Nc6 4. d4 cxd4 5. Nxd4 Nf6 6. Nxc6 bxc6 7. e5 Nd5 8.
+Ne4 Qc7 9. f4 Qb6 10. c4 Bb4+ 11. Ke2 f5 12. exf6 Nxf6 13. Be3 Qa5 14. Nxf6+
+gxf6 15. a3 Qh5+ 16. Kf2 Qxd1 17. Rxd1 Be7 18. f5 e5 19. Rd2 h5 20. c5 a5 21.
+Bd3 a4 22. Rc1 Ba6 23. Bxa6 Rxa6 24. Rc4 Ra7 25. Rb4 Kf7 26. Kf3 Rha8 27. Rc2
+Ra5 28. Kg3 Rh8 29. Kh4 Ra7 30. Rcc4 Rha8 31. h3 Ra5 32. g3 Rb5 33. Kxh5 Rg8 34.
+Kh4 Rgb8 35. g4 Rxb4 36. Rxb4 Rxb4 37. axb4 d5 38. Kg3 Bd8 39. h4 Kf8 40. g5 d4
+41. Bd2 e4 42. Bf4 fxg5 43. hxg5 Ke7 44. Kf2 Kd7 45. Ke2 Ke8 46. Kd1 Ke7 47. b5
+cxb5 48. g6 a3 49. bxa3 Ba5 50. Bg5+ Kf8 51. f6 Kg8 52. Bh6 Kh8 53. f7 Bc3 54.
+f8=Q# 1-0
 
