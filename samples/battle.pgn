@@ -1,0 +1,34 @@
+[Event "battle"]
+[Site "https://github.com/vladmandic/chess"]
+[Date "2022.10.09"]
+[Round "1"]
+[White "stockfish 15"]
+[Black "berserk 10"]
+[Result "1/2-1/2"]
+[Annotator "https://github.com/vladmandic/chess"]
+[WhiteOptions "depth:100 maxtime:25"]
+[BlackOptions "depth:100 maxtime:25"]
+[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
+[ECO "B12"]
+[Opening "Caro-Kann Defense: Advance Variation"]
+[Termination "3-fold repetition"]
+[WhiteTime "2184 ms"]
+[BlackTime "2363 ms"]
+
+1. e4 c6 2. d4 d5 3. e5 Bf5 4. Be2 e6 5. Nf3 c5 6. c3 Nc6 7. O-O Bg6 8. Be3 cxd4
+9. cxd4 Nge7 10. Nh4 Nf5 11. Nxf5 Bxf5 12. g4 Bg6 13. f4 f5 14. Nc3 Bb4 15. Qb3
+Qd7 16. g5 h6 17. Nb5 hxg5 18. fxg5 a6 19. a3 axb5 20. axb4 Rxa1 21. Rxa1 O-O
+22. Qd3 Qe7 23. Bd2 Kh7 24. h4 Qf7 25. Qc3 Rc8 26. Qe3 f4 27. Qf2 f3 28. Bxf3
+Nxd4 29. Bd1 Nf5 30. Rc1 Rc4 31. Rxc4 bxc4 32. Bg4 Kg8 33. Bc3 Kh7 34. Kh2 Kh8
+35. b5 Bh5 36. Bxf5 Bg4 37. Bd4 Bxf5 38. Qf3 Qg6 39. Kg3 Be4 40. Qg4 Qf7 41. h5
+Qf1 42. Qf4 Qg2+ 43. Kh4 Qh1+ 44. Kg3 Qg2+ 45. Kh4 Qh1+ 46. Kg3 Qxh5 47. Qh4
+Qxh4+ 48. Kxh4 Kh7 49. Kg4 Kg6 50. Bc5 Bc2 51. b6 Bf5+ 52. Kf4 Kh5 53. Bf8 g6
+54. Bc5 Bd3 55. Bf2 Be4 56. Bd4 Kh4 57. Bc5 Bf5 58. Bf2+ Kh3 59. Bc5 Bd3 60. Bd4
+Kh4 61. Bf2+ Kh5 62. Bc5 Kh4 63. Bf2+ Kh3 64. Bd4 Be4 65. Bc5 Bc2 66. Bg1 Bf5
+67. Bc5 Kg2 68. Bd4 Bb1 69. Bc5 Be4 70. Bd4 Bf5 71. Bc5 Bc2 72. Bd4 Bb1 73. Bc5
+Be4 74. Bd4 Kh3 75. Bc5 Bf5 76. Bd4 Kh4 77. Bf2+ Kh5 78. Bc5 Kh4 79. Bf2+ Kh5
+80. Bc5 Kh4 81. Bd4 Bc2 82. Bf2+ Kh3 83. Bg1 Bf5 84. Bc5 Be4 85. Bf2 Bh1 86. Bc5
+Be4 87. Be3 Bc2 88. Bg1 Bf5 89. Bf2 Kg2 90. Bc5 Be4 91. Bd4 Bf5 92. Bc5 Bc2 93.
+Bd4 Ba4 94. Bc5 Bc6 95. Bd4 Ba4 96. Bc5 Bd1 97. Bd4 Bf3 98. Be3 Bd1 99. Bc5 Bc2
+100. Bd4 Bf5 101. Bc5 1/2-1/2
+

@@ -1,6 +1,6 @@
 import * as log from '@vladmandic/pilogger';
 import * as pgn from 'kokopu';
-import { Opening, openings } from './openings';
+import { getOpeningAG } from './openings';
 import type * as UCI from './uci';
 
 export type Color = 'white' | 'black';
@@ -53,7 +53,7 @@ export class Game {
   pgn: string[] = [];
   engine: EngineInfo | undefined;
   summary: { full: Summary | undefined, decided: Summary | undefined } = { full: undefined, decided: undefined };
-  openings: { eco: string, name: string }[] = [];
+  opening: { eco: string | undefined, name: string | undefined, depth: number | undefined } = { eco: undefined, name: undefined, depth: undefined };
 
   constructor(data?: Partial<Game>) {
     this.analyzed = new Date();
@@ -103,26 +103,6 @@ const getSummary = (game: Game, cuttoffScore?: number): Summary | undefined => {
   };
 };
 
-export const getOpening = (moves: string[]) => {
-  const arrayStartsWith = (a: string[], b: string[]): boolean => {
-    if (b.length < a.length) return false;
-    let assume = true;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) {
-        assume = false;
-        break;
-      }
-    }
-    return assume;
-  };
-
-  const possible: Opening[] = openings.filter((opening) => arrayStartsWith(moves, opening.moves));
-  const best: Opening[] = possible.filter((opening) => opening.moves.length === moves.length);
-  if (best.length > 0) return best.map((opening) => ({ eco: opening.eco, name: opening.name, halfmoves: moves.length }));
-  // if (possible.length > 0 && (moves.length > 2)) return possible.map((opening) => ({ eco: opening.eco, name: opening.name }));
-  return [];
-};
-
 export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: string, playerName?): Promise<Game[]> {
   const database: pgn.Database = pgn.pgnRead(pgnText);
   const games: Game[] = [];
@@ -161,7 +141,10 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     for (let j = 0; j <= nodes.length; j++) { // analyze all moves
       const move = new Move(nodes[j]); // create played move
       agMoves.push(move.ag);
-      if (j < 14) game.openings.push(...getOpening(agMoves));
+      if (j < 20) {
+        const opening = getOpeningAG(agMoves);
+        if (opening) game.opening = { eco: opening.eco, name: opening.name, depth: opening.depth };
+      }
       const res: UCI.Analysis = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
       if (!res || !res.depth || !res.lines || res.lines.length === 0) {
         log.warn('sf engine return no move', { current: move, previous, fen: engine.fen, res });

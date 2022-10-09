@@ -69,6 +69,7 @@ export class Engine {
   private engineOptions: string[] = [];
   private duration = 0;
   private lastFen: string = '';
+  private lastReady: bigint = 0n;
   private ascii: string[] = [];
   syzygy: { wdl: string | undefined, dtz: number | undefined } = { wdl: undefined, dtz: undefined };
   name: string | undefined;
@@ -91,7 +92,7 @@ export class Engine {
     this.instance = spawn(this.options.engine);
     this.buffer = Buffer.alloc(0); // Initialise the output buffer.
     this.instance.stdout?.on('data', (chunk: Buffer) => { // Handle the output of the Stockfish process.
-      if (this.options.debug) log.data('sf', { stdout: chunk.toString() }); // .toString());
+      if (this.options.debug) log.data('uci', { stdout: chunk.toString() }); // .toString());
       chunk = Buffer.concat([this.buffer, chunk]); // Prepend the previous buffer to the chunk.
       const lastNewline = chunk.lastIndexOf('\n'); // If the last line doesn't end with a newline, buffer the data until we get a newline.
       if (lastNewline !== chunk.length - 1) this.buffer = chunk.slice(lastNewline + 1);
@@ -140,9 +141,14 @@ export class Engine {
   async ready(): Promise<boolean> {
     return new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (this.state === 'ready') {
+        if (this.state === 'ready' || this.state === 'terminated') {
+          this.lastReady = process.hrtime.bigint();
           clearInterval(interval);
           resolve(true);
+        }
+        if (this.lastReady > 0n && Number(process.hrtime.bigint() - this.lastReady) / 1000 / 1000 > 2 * this.options.maxTime) { // sometimes engine may not respond to initial stop
+          this.send('stop');
+          this.send('isready');
         }
       }, 5);
     });
@@ -173,9 +179,9 @@ export class Engine {
     this.startTime = process.hrtime.bigint();
     this.lines = new Map();
     this.depth = 0;
-    if (options?.depth) this.options.depth = options.depth;
-    if (options?.lines) this.options.lines = options.lines;
-    if (options?.maxTime) this.options.maxTime = options.maxTime;
+    if (options?.depth && options?.depth > 0) this.options.depth = options.depth;
+    if (options?.lines && options?.lines > 0) this.options.lines = options.lines;
+    if (options?.maxTime && options?.maxTime > 0) this.options.maxTime = options.maxTime;
     if (this.options.lines > 1) this.send(`setoption name MultiPV value ${this.options.lines}`);
     if (this.options.depth > 0) this.send(`go depth ${this.options.depth}`);
     else this.send('go infinite');
@@ -183,9 +189,10 @@ export class Engine {
     if (this.options.maxTime && this.options.maxTime > 0) this.timeout = setTimeout(() => this.send('stop'), this.options.maxTime);
   }
 
-  stop() {
+  async stop() {
     this.send('stop');
     this.state = 'stopping';
+    await this.ready();
   }
 
   async board(): Promise<string> {
@@ -236,7 +243,7 @@ export class Engine {
         } else if (line.includes('currmove')) {
           continue;
         } else {
-          log.data('sf unknown line', { line });
+          // log.data('uci: unknown line', { line });
         }
       }
       if (line.startsWith('Tablebases')) {
@@ -284,7 +291,7 @@ export class Engine {
       case 'lowerbound': score = new Score(scoreVal / 100, 'lowerbound'); break;
       case 'upperbound': score = new Score(scoreVal / 100, 'upperbound'); break;
       case 'mate': score = new Score(scoreVal, 'mate'); break;
-      default: log.data('sf unknown score', { scoreType });
+      default: log.data('uci: unknown score type', { scoreType });
     }
     if (!score) return;
     if (this.turn === 'black') score.score *= -1;
@@ -303,17 +310,24 @@ export class Engine {
   }
 
   send(str: string) {
-    this.instance?.stdin?.write(`${str}\n`);
+    const ok = this.instance?.stdin?.writable && !this.instance.exitCode;
+    if (!ok) {
+      log.error('uci: send failed', { pid: this.instance?.pid, command: str, code: this.instance?.exitCode, killed: this.instance?.killed, signal: this.instance?.signalCode });
+      this.state = 'terminated';
+    } else {
+      this.instance?.stdin?.write(`${str}\n`);
+    }
   }
 
   terminate() {
+    this.state = 'terminated';
+    if (this.instance.exitCode) return; // already exited
     this.send('stop');
     this.send('quit');
     setTimeout(() => this.instance.kill('SIGTERM'), 10);
     setTimeout(() => this.instance.kill('SIGKILL'), 100);
     setTimeout(() => {
-      if (this.options.debug) log.data('sf exit', { code: this.instance.exitCode, signal: this.instance.signalCode });
+      if (this.options.debug) log.data('engine exit', { code: this.instance.exitCode, signal: this.instance.signalCode });
     }, 200);
-    this.state = 'terminated';
   }
 }

@@ -8,13 +8,13 @@ const playerName = 'VladMandic';
 const uciOptions: Partial<UCI.Options> = {
   debug: false, // log uci communication
   lines: 1, // analyze n top lines
-  depth: 12, // max depth per move
-  maxTime: 2000, // max time per move in ms
+  depth: 100, // max depth per move
+  maxTime: 25, // max time per move in ms
   maxScore: 10, // consider game decided for purpose of statistics once score is reached
   engine: '/home/vlado/dev/chess/engine/stockfish/sf15-bmi2', // stockfish executable
   // engine: '/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe',
   nnue: 'nn-6877cd24400e.nnue', // nnue file with path local to stockfish binary
-  options: ['Threads value 16'], // additional options to pass to stockfish engine
+  // options: ['Threads value 16'], // additional options to pass to stockfish engine
 };
 
 async function main() {

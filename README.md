@@ -2,7 +2,7 @@
 
 Written in **TypeScript**, using **UCI Engine** and managed from **NodeJS**
 
-Tested using [Stockfish](https://stockfishchess.org/) and [LCZero](https://lczero.org/), but likely compatibile with other UCI chess engines  
+Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.org/) and [Beserk](https://github.com/jhonnold/berserk), but likely compatibile with other UCI chess engines  
 *Note: Before using, download one more engines using links below*  
 
 ## Apps
@@ -54,6 +54,7 @@ Note: all sources are compiled using `@vladmandic/build` CI tool
 - [UCI Protocol Specs](docs/uci-protocol.md)
 - [UCI Commands for Stockfish](docs/uci-stockfish.md)
 - [UCI Options for Stockfish and LCZero](docs/uci-options.md)
+- [PGN Format Specification](docs/pgn-specs.md)
 
 ## Links
 - [Stockfish Binaries](https://stockfishchess.org/download/)
@@ -63,6 +64,7 @@ Note: all sources are compiled using `@vladmandic/build` CI tool
 - [ECO Openings Codes Table](https://www.chessjournal.com/eco/)
 - [What is NNUE](https://www.chessprogramming.org/NNUE)
 - [Syzygy endgame tablebases](https://syzygy-tables.info/)
+- [Chess Openings](https://github.com/lichess-org/chess-openings)
 
 ## Todo
 

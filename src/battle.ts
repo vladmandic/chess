@@ -1,21 +1,24 @@
+import { readFileSync, writeFileSync } from 'fs';
 import * as log from '@vladmandic/pilogger';
 import * as k from 'kokopu';
 import * as UCI from './uci';
-import { getOpening } from './game';
+import { getOpeningUCI } from './openings';
 
-const maxMoves = 200;
-const maxGames = 1;
-const maxSolved = 4;
+interface Config {
+  maxMoves?: number,
+  numGames?: number,
+  solvedDepth?: number,
+  initialFEN?: string,
+  pgnOutput?: string,
+  engineOptions: Partial<UCI.Options>,
+}
 
-const engineOptions: [Partial<UCI.Options>, Partial<UCI.Options>] = [
-  { depth: 100, maxTime: 25, engine: '/home/vlado/dev/chess/engine/stockfish/sf15-bmi2', nnue: 'nn-6877cd24400e.nnue', syzygy: '/home/vlado/dev/chess/engine/syzygy' },
-  { depth: 100, maxTime: 25, engine: '/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe' },
-];
+let config: Config;
 
 // eslint-disable-next-line max-len
 const squares = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3', 'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4', 'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5', 'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8'];
 
-async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFEN: string): Promise<k.Game> {
+async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<k.Game> {
   // reset engines
   await ew.reset();
   await eb.reset();
@@ -40,8 +43,9 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFE
   const time: [number, number] = [0, 0];
   let line: k.Variation | k.Node = game.mainVariation();
 
-  let side: k.Color = initialFEN.split(' ')[1] as k.Color || 'w';
-  position.fen(initialFEN);
+  if (!config.initialFEN) config.initialFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  let side: k.Color = config.initialFEN.split(' ')[1] as k.Color || 'w';
+  position.fen(config.initialFEN);
 
   game.tag('FEN', position.fen());
   log.info('starting game', { round, side, fen: position.fen() });
@@ -49,6 +53,10 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFE
 
   // run moves
   while (true) { // eslint-disable-line no-constant-condition
+    if (ew.state !== 'ready' || eb.state !== 'ready') {
+      log.warn('engine not ready, aborting');
+      break;
+    }
     fens.push(fen);
 
     // run actual engine calculation
@@ -58,10 +66,10 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFE
 
     // play recommended move on the board
     const uci = best.lines[0].moves[0];
-    if (!uci) break;
+    if (!uci) continue;
     const moveDesc = position.uci(uci);
     const san = position.notation(moveDesc);
-    moves.push(san);
+    moves.push(uci);
     position.play(san);
     line = line.play(san);
     fen = position.fen();
@@ -75,18 +83,19 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFE
       else if (piece[0] === 'b') pieces += piece[1];
     }
     move.pieces = pieces.length;
-    if (pieces.length <= maxSolved) {
+    if (config.solvedDepth && pieces.length <= config.solvedDepth) {
       const solved = await ew.solve();
       if (solved) move.solved = solved;
     }
 
     // annotate move
-    const openings = getOpening(moves);
-    if (openings.length > 0) move.opening = openings.map((o) => ({ eco: o.eco, name: o.name }))[0];
-    if (move.opening) {
-      game.tag('ECO', move.opening['eco']);
-      game.tag('Opening', move.opening['name']);
+    const opening = getOpeningUCI(moves);
+    if (opening) {
+      move.opening = { eco: opening.eco, name: opening.name };
+      game.tag('ECO', opening.eco);
+      game.tag('Opening', opening.name);
     }
+
     const repetitions = fens.filter((f) => f === move.fen).length;
     if (repetitions >= 1) move.repeat = repetitions;
     if (position.isCheck()) move.check = true;
@@ -122,7 +131,7 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, initialFE
       game.result('1/2-1/2');
       break;
     }
-    if (line.fullMoveNumber() >= maxMoves) {
+    if (config.maxMoves && line.fullMoveNumber() >= config.maxMoves) {
       game.tag('Termination', 'Maxmimum moves reached');
       break;
     }
@@ -144,21 +153,31 @@ async function main() {
   log.configure({ inspect: { breakLength: 400 } });
   log.headerJson();
 
-  const ew: UCI.Engine = new UCI.Engine(engineOptions[0]); // engine white
-  await ew.ready();
-  log.state('engine white', { name: ew.name, state: ew.state, info: ew.info, options: ew.options });
-  const eb: UCI.Engine = new UCI.Engine(engineOptions[1]); // engine black
-  await eb.ready();
-  log.state('engine black', { name: eb.name, state: eb.state, info: eb.info, options: eb.options });
+  const configFile = process.argv[2] || 'battle.json';
+  log.info({ configFile });
+  const configText = readFileSync(configFile, 'utf-8');
+  config = JSON.parse(configText) as Config;
+  log.info('config', config);
 
-  const initialFEN = (process.argv.length > 2) ? process.argv[2] : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const ew: UCI.Engine = new UCI.Engine(config.engineOptions[0]); // engine white
+  await ew.ready();
+  log.state('engine white', { name: ew.name, state: ew.state });
+  const eb: UCI.Engine = new UCI.Engine(config.engineOptions[1]); // engine black
+  await eb.ready();
+  log.state('engine black', { name: eb.name, state: eb.state });
 
   let pgn: string = '';
-  for (let i = 1; i <= maxGames; i++) {
-    const game = await playGame(ew, eb, i, initialFEN);
+  if (!config.numGames) config.numGames = 1;
+  for (let i = 1; i <= config.numGames; i++) {
+    const game = await playGame(ew, eb, i);
     pgn += k.pgnWrite(game) + '\n';
   }
-  log.data('pgn', '\n', pgn);
+  if (config.pgnOutput) {
+    writeFileSync(config.pgnOutput, pgn, 'utf-8');
+    log.data('pgn', { file: config.pgnOutput }, `\n${pgn}`);
+  } else {
+    log.data('pgn', `\n${pgn}`);
+  }
 
   ew.terminate();
   eb.terminate();
@@ -166,3 +185,9 @@ async function main() {
 }
 
 main();
+
+/*
+  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "/home/vlado/dev/chess/engine/syzygy" },
+  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "nn-6877cd24400e.nnue" }
+  { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe" },
+*/
