@@ -2,8 +2,25 @@
 
 Written in **TypeScript**, using **UCI Engine**, managed from **NodeJS**
 
-Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.org/) and [Beserk](https://github.com/jhonnold/berserk), but likely compatibile with other UCI chess engines  
-*Note: Before using, download one more engines*  
+Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.org/) and [Beserk](https://github.com/jhonnold/berserk)  
+Also compatibile with **Stockfish WASM** ports like [1](https://github.com/lichess-org/stockfish.wasm) or [2](https://github.com/hi-ogawa/Stockfish)  
+
+
+## Configuration Examples
+```json
+// stockfish 15 with nnue and syzygy database
+{ "maxTime": 25, "engine": "engine/stockfish-15/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "engine/syzygy" }, 
+// stockfish 11 small // included!
+{ "maxTime": 25, "engine": "engine/stockfish-11/stockfish_20011801_linux" }, 
+// beserker 10 with nnue
+{ "maxTime": 25, "engine": "engine/beserk/berserk-10-x64-avx2.exe", "nnue": "engine/beserk/berserk-c982d9682d4e.nn" }
+// lczero with cuda execution
+{ "maxTime": 25, "engine": "leela/lc0-0.28.2-cuda.exe" },
+// tiny stockfish classical as wasm from lichess-org // included!
+{ "depth": 10, "engine": "../engine/lichess-org/stockfish.js", "type": "wasm" }
+// full stockfish classical as wasm from hi-ogawa
+{ "depth": 10, "engine": "../engine/hi-ogawa/stockfish.js", "type": "wasm" }
+```
 
 ## Modes
 
@@ -36,7 +53,9 @@ Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.o
 ## Code
 
 - `src/uci.ts`  
-  handles initialization and all communication with the engine  
+  handles uci protocol communication  
+- `src/engine.ts`  
+  initializes engine and creates input/output channel  
 - `src/game.ts`  
   analyzes pgn  
   generates and translates individual moves  
@@ -54,6 +73,29 @@ Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.o
 
 <br>
 
+## WASM .vs. External Process
+
+**WASM** Stockfish modules can be dynamically imported and used, but with some limitations as execution is still primarily single-threaded  
+As a result, do not rely on engine `maxTime` parameter as engine may not be able to respond to stop analysis requests after specific time  
+Instead, set reasonable value for `depth` parameter which automatically finishes move analysis as desired depth is reached  
+
+But this is simplest option to try this library as simple **Stockfish WASM** engine is included in the distribution  
+Also this allows for execution on otherwise unsupported platforms where UCI binaries may not be readily available  
+
+**External Process** execution is much more flexible as each process runs independently  
+Just make sure to download binaries that can be executed on your platform!  
+
+Btw, if you're using **WSL**, you can use *either* Linux or Windows builds without differences since Stockfish is statically linked and process spawning will handle it automatically
+
+<br>
+
+## ECO and Syzygy Databases
+
+- ECO chess openings database is automatically generated from [LiChess Repository](https://github.com/lichess-org/chess-openings)
+- Syzygy endgame tablebases are provided for 4-move combination, but you can provide any variation up to massive [7-move solutions](https://syzygy-tables.info/)
+
+<br>
+
 ## Docs
 - [UCI Protocol Specs](docs/uci-protocol.md)
 - [UCI Commands for Stockfish](docs/uci-stockfish.md)
@@ -61,17 +103,7 @@ Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.o
 - [PGN Format Specification](docs/pgn-specs.md)
 - [ECO Chess Openings](https://github.com/lichess-org/chess-openings)
 
-## Links
-- [Stockfish Binaries](https://stockfishchess.org/download/)
-- [Stockfish Sources](https://github.com/official-stockfish/Stockfish)
-- [Leela Chess Zero Binaries](https://lczero.org/play/download/)
-- [Leela Chess Zero Sources](https://github.com/LeelaChessZero/lc0)
-- [Syzygy endgame tablebases](https://syzygy-tables.info/)
-
 ## Todo
 
-- Cleanup absolute-to-relative paths
 - Remove local-tree dependencies
 - Allow battles with starting FEN
-- Debug UCI hangs or exceptions
-- Built-in test UCI engine

@@ -27,7 +27,7 @@ export class Move {
   }
 }
 
-export interface Summary {
+export interface Overview {
   best: number, great: number, good: number, inaccurate: number, mistake: number, blunder: number
 }
 
@@ -46,13 +46,11 @@ export class Game {
   analyzed: Date | undefined;
   players: [string, string];
   result: string | undefined;
-  win: boolean | undefined;
   line: Move[];
-  color: Color | undefined;
-  acpl: { full: number | undefined, decided: number | undefined } = { full: undefined, decided: undefined };
   pgn: string[] = [];
   engine: EngineInfo | undefined;
-  summary: { full: Summary | undefined, decided: Summary | undefined } = { full: undefined, decided: undefined };
+  acpl: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
+  overview: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
   opening: { eco: string | undefined, name: string | undefined, depth: number | undefined } = { eco: undefined, name: undefined, depth: undefined };
 
   constructor(data?: Partial<Game>) {
@@ -63,18 +61,16 @@ export class Game {
     this.date = data?.date;
     this.players = data?.players || ['', ''];
     this.line = data?.line || [];
-    this.color = data?.color;
     if (data?.pgn) this.pgn = data.pgn;
     if (data?.engine) this.engine = data.engine;
   }
 }
 
-const getACPL = (game: Game, cuttoffScore?: number): number | undefined => {
-  if (!game?.color) return undefined;
+const getACPL = (game: Game, cuttoffScore: number, color: Color): number | undefined => {
   const lastMove = cuttoffScore && cuttoffScore > 0 ? game.line.findIndex((move) => (move.score) >= cuttoffScore) : game.line.length - 1;
-  const line = game.line.slice(0, lastMove).filter((move) => game.color?.startsWith(move.color));
+  const line = game.line.slice(0, lastMove).filter((move) => color.startsWith(move.color));
   const acpl = Math.round(100 * line.reduce((prev, curr) => prev += curr.cpl, 0) / line.length);
-  return acpl;
+  return Math.abs(acpl);
 };
 
 const getFlags = (move: Move) => {
@@ -89,21 +85,20 @@ const getFlags = (move: Move) => {
   return 'ok';
 };
 
-const getSummary = (game: Game, cuttoffScore?: number): Summary | undefined => {
-  if (!game?.color) return undefined;
+const getOverview = (game: Game, cuttoffScore: number, color: Color): Overview | undefined => {
   const lastMove = cuttoffScore && cuttoffScore > 0 ? game.line.findIndex((move) => (move.score) >= cuttoffScore) : game.line.length - 1;
   const line = game.line.slice(0, lastMove);
   return {
-    best: line.filter((move) => move.flags === 'best' && game.color?.startsWith(move.color)).length,
-    blunder: line.filter((move) => move.flags === 'blunder' && game.color?.startsWith(move.color)).length,
-    mistake: line.filter((move) => move.flags === 'mistake' && game.color?.startsWith(move.color)).length,
-    inaccurate: line.filter((move) => move.flags === 'inaccurate' && game.color?.startsWith(move.color)).length,
-    good: line.filter((move) => move.flags === 'good' && game.color?.startsWith(move.color)).length,
-    great: line.filter((move) => move.flags === 'great' && game.color?.startsWith(move.color)).length,
+    best: line.filter((move) => move.flags === 'best' && color.startsWith(move.color)).length,
+    blunder: line.filter((move) => move.flags === 'blunder' && color.startsWith(move.color)).length,
+    mistake: line.filter((move) => move.flags === 'mistake' && color.startsWith(move.color)).length,
+    inaccurate: line.filter((move) => move.flags === 'inaccurate' && color.startsWith(move.color)).length,
+    good: line.filter((move) => move.flags === 'good' && color.startsWith(move.color)).length,
+    great: line.filter((move) => move.flags === 'great' && color.startsWith(move.color)).length,
   };
 };
 
-export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: string, playerName?): Promise<Game[]> {
+export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: string): Promise<Game[]> {
   const database: pgn.Database = pgn.pgnRead(pgnText);
   const games: Game[] = [];
   for (let i = 0; i < database.gameCount(); i++) { // pgn can contain multiple games
@@ -116,9 +111,6 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       continue;
     }
     const players: [string, string] = [pgnGame.playerName('w') || '', pgnGame.playerName('b') || ''];
-    let color;
-    if (players[0] === playerName) color = 'white';
-    if (players[1] === playerName) color = 'black';
     const variation = pgnGame.mainVariation(); // game can have multiple variations but we only look at played variation
     const nodes: pgn.Node[] = variation.nodes(); // array of moves
     const game = new Game({
@@ -127,13 +119,10 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       moves: Math.round(nodes.length / 2),
       date: pgnGame.dateAsDate(),
       players,
-      color,
       pgn: pgnText.split('\n'),
       engine: { name: engine.name, info: engine.info, options: engine.options, time: 0 },
     });
     game.result = pgnGame.result();
-    if (game.color === 'white') game.win = game.result === '1-0';
-    if (game.color === 'black') game.win = game.result === '0-1';
     await engine.reset(); // reset engine
     let previous: Move = new Move();
     const scores: number[] = [];
@@ -145,22 +134,22 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
         const opening = getOpeningAG(agMoves);
         if (opening) game.opening = { eco: opening.eco, name: opening.name, depth: opening.depth };
       }
-      const res: UCI.Analysis = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
-      if (!res || !res.depth || !res.lines || res.lines.length === 0) {
-        log.warn('sf engine return no move', { current: move, previous, fen: engine.fen, res });
+      let res: UCI.Analysis;
+      res = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
+      while ((res?.lines?.length || 0) < 1) {
+        log.warn('no move found, retrying:', res);
+        res = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
         continue;
       }
       const best: UCI.Line = res.lines[0];
       move.best = best.moves[0]; // only interested first move from sequence
       game.line.push(move); // add move to game
-      if (best.score.type === 'cp') {
-        scores.push((game.color === 'black' ? -1 : 1) * best.score.score); // add normalized score
-      }
+      if (best.score.type === 'cp') scores.push(best.score.score); // add normalized score
       if (best.score.type === 'mate') {
-        scores.push(game.color?.startsWith(move.color) ? 99 : -99);
+        scores.push((move.color === 'white' ? 1 : -1) * 100);
         previous.flags = `mate in ${best.score.score}`;
       }
-      previous.cpl = Math.round(100 * (scores[scores.length - 2] - scores[scores.length - 1])) / 100;
+      previous.cpl = (move.color === 'white' ? -1 : 1) * Math.round(100 * (scores[scores.length - 2] - scores[scores.length - 1])) / 100;
       previous.score = scores[scores.length - 1]; // set score for previous move after it was played as engine
       previous.flags = getFlags(previous);
       previous = move; // switch current move to previous
@@ -173,8 +162,14 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     }
     const t1 = process.hrtime.bigint();
     game.line.length = Math.min(game.line.length, nodes.length);
-    game.acpl = { full: getACPL(game, 0), decided: getACPL(game, 10) };
-    game.summary = { full: getSummary(game, 0), decided: getSummary(game, 10) };
+    game.acpl = {
+      white: { full: getACPL(game, 0, 'white'), decided: getACPL(game, 10, 'white') },
+      black: { full: getACPL(game, 0, 'black'), decided: getACPL(game, 10, 'black') },
+    };
+    game.overview = {
+      white: { full: getOverview(game, 0, 'white'), decided: getOverview(game, 10, 'white') },
+      black: { full: getOverview(game, 0, 'black'), decided: getOverview(game, 10, 'black') },
+    };
     if (game.engine) game.engine.time = Math.round(Number(t1 - t0) / 1000 / 1000);
     games.push(game);
   }

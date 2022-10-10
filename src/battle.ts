@@ -13,9 +13,10 @@ interface Config {
   openings?: string,
   engineOptions: Partial<UCI.Options>,
   /*
-    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "/home/vlado/dev/chess/engine/syzygy" },
-    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/beserk/berserk-10-x64-avx2.exe", "nnue": "nn-6877cd24400e.nnue" }
-    { "depth": 100, "maxTime": 25, "engine": "/home/vlado/dev/chess/engine/leela/lc0-0.28.2-cuda.exe" },
+    { "depth": 100, "maxTime": 25, "engine": "engine/stockfish/sf15-bmi2", "nnue": "nn-6877cd24400e.nnue", "syzygy": "engine/syzygy", "debug": false },
+    { "depth": 100, "maxTime": 25, "engine": "engine/beserk/berserk-10-x64-avx2.exe", "nnue": "engine/beserk/berserk-c982d9682d4e.nn", "debug": false }
+    { "depth": 100, "maxTime": 25, "engine": "leela/lc0-0.28.2-cuda.exe", "debug": false },
+    { "depth": 100, "maxTime": 25, "engine": "../engine/lichess-org/stockfish.js", "debug": false, "type": "wasm" }
   */
 }
 
@@ -66,7 +67,10 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
 
     // run actual engine calculation
     const best = side === 'w' ? await ew.play(fen) : await eb.play(fen);
-    if (best.lines.length < 1) continue; // retry as engine did not report a move
+    if ((best?.lines?.length || 0) < 1) {
+      log.warn('no move found, retrying:', best);
+      continue;
+    }
     time[side === 'w' ? 0 : 1] += best.time;
 
     // play recommended move on the board
@@ -114,7 +118,7 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
       move.solved = true;
     }
     if (best.lines[0].score.type === 'mate') move.mate = best.lines[0].score.score;
-    log.info(move);
+    log.data(move);
 
     // check game conditions
     if (!position.isLegal()) {
@@ -156,7 +160,7 @@ async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number): Promise<
 }
 
 async function main() {
-  log.configure({ inspect: { breakLength: 400 } });
+  log.configure({ inspect: { breakLength: 250 } });
   log.headerJson();
 
   const configFile = process.argv[2] || 'battle.json';
@@ -164,27 +168,27 @@ async function main() {
   const configText = fs.readFileSync(configFile, 'utf-8');
   config = JSON.parse(configText) as Config;
   log.info('config', config);
-
+  if (!config.numGames) config.numGames = 1;
   initOpenings(config.openings);
 
   const ew: UCI.Engine = new UCI.Engine(config.engineOptions[0]); // engine white
-  await ew.ready();
-  log.state('engine white', { name: ew.name, state: ew.state });
+  await ew.init();
+  log.state('engine white', { name: ew.name, type: ew.options.type, state: ew.state, info: ew.info });
   const eb: UCI.Engine = new UCI.Engine(config.engineOptions[1]); // engine black
-  await eb.ready();
-  log.state('engine black', { name: eb.name, state: eb.state });
+  await eb.init();
+  log.state('engine black', { name: eb.name, type: eb.options.type, state: eb.state, info: eb.info });
 
   let pgn: string = '';
-  if (!config.numGames) config.numGames = 1;
   for (let i = 1; i <= config.numGames; i++) {
     const game = await playGame(ew, eb, i);
     pgn += k.pgnWrite(game, { withPlyCount: true }) + '\n';
   }
+
   if (config.pgnOutput) {
     fs.writeFileSync(config.pgnOutput, pgn, 'utf-8');
-    log.data('pgn', { file: config.pgnOutput }, `\n${pgn}`);
+    log.info('pgn', { file: config.pgnOutput }, `\n${pgn}`);
   } else {
-    log.data('pgn', `\n${pgn}`);
+    log.info('pgn', `\n${pgn}`);
   }
 
   ew.terminate();

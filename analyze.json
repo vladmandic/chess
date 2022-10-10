@@ -1,0 +1,9 @@
+{
+  "debug": false,
+  "lines": 1,
+  "depth": 10,
+  "maxTime": 1000,
+  "maxScore": 10,
+  "engine": "../engine/lichess-org/stockfish.js",
+  "type": "wasm"
+}

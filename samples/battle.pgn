@@ -1,30 +1,23 @@
 [Event "battle"]
 [Site "https://github.com/vladmandic/chess"]
-[Date "2022.10.09"]
+[Date "2022.10.10"]
 [Round "1"]
-[White "stockfish 15"]
-[Black "berserk 10"]
-[Result "1-0"]
+[White "stockfish 11 64 popcnt"]
+[Black "stockfish sf_classical 64 popcnt"]
+[Result "1/2-1/2"]
 [Annotator "https://github.com/vladmandic/chess"]
-[BlackTitle "depth:100 maxtime:25 usedTime: 1981 ms"]
-[ECO "B40"]
-[Opening "Sicilian Defense: Four Knights Variation"]
-[PlyCount "175"]
-[Termination "White wins"]
-[WhiteTitle "depth:100 maxtime:25 usedTime: 1936 ms"]
+[BlackTitle "depth:15 maxtime:250 usedTime: 3013 ms"]
+[ECO "B10"]
+[Opening "Caro-Kann Defense: Accelerated Panov Attack"]
+[PlyCount "82"]
+[Termination "3-fold repetition"]
+[WhiteTitle "depth:15 maxtime:250 usedTime: 2972 ms"]
 
-1. e4 c5 2. Nf3 e6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 Nc6 6. Bf4 Bb4 7. Nb5 O-O 8.
-Bc7 Qe7 9. Bd6 Bxd6 10. Qxd6 a6 11. Qxe7 Nxe7 12. Nd6 b5 13. O-O-O Ra7 14. Be2
-b4 15. Na4 a5 16. f3 Ba6 17. Bxa6 Rxa6 18. Rd3 Ned5 19. exd5 Rxd6 20. dxe6 Rxe6
-21. Nc5 Re2 22. Rd2 Rxd2 23. Kxd2 Nd5 24. Nb7 Nf4 25. g3 Ne6 26. Rd1 Ng5 27. Ke2
-Re8+ 28. Kf2 Rc8 29. Ke3 Re8+ 30. Kf2 Rc8 31. Rd2 a4 32. Nd6 Rc5 33. b3 Ne6 34.
-f4 a3 35. Ke2 f6 36. Ne4 Rh5 37. Kf3 Kf8 38. c4 Ke7 39. Nd6 Kd8 40. f5 Nc7 41.
-Kg2 g6 42. g4 Rh4 43. h3 g5 44. Ne4 Ke7 45. Re2 Kf7 46. Nc5 d6 47. Ne4 d5 48.
-Nd6+ Kf8 49. Nb5 dxc4 50. Nxc7 cxb3 51. axb3 h5 52. gxh5 Kg7 53. Ne8+ Kf7 54.
-Nd6+ Kg7 55. Re7+ Kf8 56. Rf7+ Kg8 57. Ra7 Rxh5 58. Ne4 Rh6 59. Nf2 Rh7 60. Ra8+
-Kf7 61. Ng4 Rg7 62. Ra6 Kf8 63. Kf3 Rh7 64. Ra8+ Kg7 65. Ra7+ Kh8 66. Ra8+ Kg7
-67. Kg2 Rh4 68. Ra7+ Kf8 69. Kg3 Kg8 70. Nxf6+ Kh8 71. Ng4 Rh7 72. Ra8+ Kg7 73.
-Kg2 Rh4 74. Ra7+ Kg8 75. Kg3 Rh8 76. f6 Rh4 77. Ne5 Rf4 78. Rg7+ Kf8 79. Ng6+
-Ke8 80. Nxf4 gxf4+ 81. Kxf4 Kd8 82. Rg8+ Kc7 83. f7 a2 84. f8=Q a1=Q 85. Qf7+
-Kb6 86. Rg6+ Qf6+ 87. Rxf6+ Kb5 88. Qd5# 1-0
+1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 Bg4 8.
+Bc4 e6 9. O-O Be7 10. h3 Bh5 11. Bxd5 exd5 12. Bf4 O-O 13. Re1 Bf6 14. g4 Bg6
+15. Qb3 h5 16. Qxb7 Nxd4 17. Nxd4 Bxd4 18. Nxd5 Qh4 19. Ne7+ Kh7 20. Qf3 Rfe8
+21. g5 Bxb2 22. Rad1 Ba3 23. Nxg6 fxg6 24. Kg2 Bc5 25. Qg3 Rxe1 26. Rxe1 Qxg3+
+27. fxg3 Rd8 28. Re5 Bd4 29. Re2 Bb6 30. h4 Rd5 31. Kf3 Ra5 32. Ke4 Kg8 33. Kd3
+Ra4 34. Kc3 Bc5 35. Rb2 Bf8 36. Kb3 Rb4+ 37. Kc3 Ra4 38. Bb8 Bc5 39. Bf4 Bf8 40.
+Kb3 Rb4+ 41. Kc3 Ra4 1/2-1/2
 
