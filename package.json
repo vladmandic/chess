@@ -18,9 +18,8 @@
     "url": "git+https://github.com/vladmandic/chess.git"
   },
   "scripts": {
-    "start": "node --enable-source-maps dist/chess.js $1",
-    "dev": "build --profile development",
-    "prod": "build --profile production",
+    "start": "node dist/battle.js",
+    "build": "build --profile production",
     "openings": "node --no-warnings src/generate-openings.js",
     "analyze": "build --profile production && node --enable-source-maps --trace-warnings dist/analyze.js $1",
     "battle": "build --profile production && node --enable-source-maps --trace-warnings dist/battle.js"
