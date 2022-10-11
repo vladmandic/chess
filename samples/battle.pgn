@@ -6,15 +6,16 @@
 [Black "stockfish sf_classical 64 popcnt"]
 [Result "1/2-1/2"]
 [Annotator "https://github.com/vladmandic/chess"]
-[BlackTitle "depth:15 maxtime:250 nodes:6141118 usedTime:3268ms"]
-[PlyCount "77"]
+[BlackTitle "depth:15 maxtime:250 nodes:5961315 usedTime:3149ms"]
+[PlyCount "88"]
 [Termination "3-fold repetition"]
-[WhiteTitle "depth:15 maxtime:250 nodes:9951533 usedTime:3778ms"]
+[WhiteTitle "depth:15 maxtime:250 nodes:8782619 usedTime:3482ms"]
 
 1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 e6 8.
 Bd3 Be7 9. O-O O-O 10. Re1 Nf6 11. Bf4 b6 12. a3 Bb7 13. Bc2 Bd6 14. Bg5 Ne7 15.
-Rc1 Ng6 16. Bxf6 Qxf6 17. Be4 Bxe4 18. Nxe4 Qd8 19. g3 Ne7 20. Rc4 b5 21. Rc1 b4
-22. Qd3 bxa3 23. bxa3 h6 24. Red1 Bc7 25. Rc4 Bb6 26. Rdc1 Qd5 27. Nc3 Qh5 28.
-Na4 Qd5 29. Ne5 Rfd8 30. Nxb6 axb6 31. R1c3 Rac8 32. Rxc8 Nxc8 33. Nc6 Rd7 34.
-Nb8 Rd8 35. Nc6 Rd7 36. Nb8 Rd8 37. Nc6 Rd7 38. Nb8 Rd8 39. Nc6 1/2-1/2
+Bxf6 gxf6 16. Be4 Bxe4 17. Nxe4 Nd5 18. Nxd6 Qxd6 19. Re4 Kh8 20. Rh4 Rg8 21.
+Qd3 Rg7 22. Rc1 Rd8 23. g3 f5 24. Qe2 f6 25. Ne1 Nf4 26. Qe3 e5 27. Nf3 Qd5 28.
+Rh6 Rf8 29. Re1 Kg8 30. h3 b5 31. Kh2 Ng6 32. Rh5 f4 33. gxf4 Qf7 34. fxe5 fxe5
+35. Nxe5 Nxe5 36. Rxe5 Qg6 37. Qg3 Qf6 38. Qe3 Qg6 39. Qg3 Qf6 40. Qe3 Qg6 41.
+Qg3 Qf6 42. Qe3 Qg6 43. Qg3 Qf6 44. Qe3 Qg6 1/2-1/2
 

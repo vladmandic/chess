@@ -89,13 +89,14 @@ export async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, co
       game.eco(opening.eco);
       game.opening(opening.name);
     }
-    const repetitions = fens.filter((f) => f === move.fen).length;
+    const repetitions = fens.filter((f) => f === move.fen).length - 1;
     if (repetitions >= 1) move.repeat = repetitions;
     if (position.isCheck()) move.check = true;
     if (moveDesc.isCapture()) move.capture = moveDesc.capturedColoredPiece();
     if (position.isCheckmate()) move.checkmate = true;
     if (position.isStalemate()) move.stalemate = true;
-    if (position.isInsufficientMaterial()) move.insufficient = true;
+    if (position.isDead()) move.insufficient = true;
+    if (!position.isLegal()) move.illegal = true;
     if (best.lines[0].score.type === 'cp') move.score = best.lines[0].score.score;
     if (best.lines[0].score.type === 'syzygy') {
       move.score = best.lines[0].score.score;
@@ -105,26 +106,26 @@ export async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, co
     log.data(move);
 
     // check game conditions
-    if (!position.isLegal()) {
-      log.error('illegal position reached', position.fen());
+    if (move.illegal) {
+      log.error('Illegal position reached', position.fen());
       break;
     }
-    if (position.isCheckmate()) {
+    if (move.checkmate) {
       game.result(position.turn() === 'w' ? '0-1' : '1-0');
       game.termination((position.turn() === 'w' ? 'Black' : 'White') + ' wins');
       break;
     }
-    if (position.isStalemate()) {
+    if (move.stalemate) {
       game.termination('Stalemate');
       game.result('1/2-1/2');
       break;
     }
-    if (position.isInsufficientMaterial()) {
+    if (move.insufficient) {
       game.termination('Insufficient material');
       game.result('1/2-1/2');
       break;
     }
-    if (config.maxMoves && line.fullMoveNumber() >= config.maxMoves) {
+    if (config.maxMoves && (line.fullMoveNumber() >= config.maxMoves)) {
       game.termination('Maxmimum moves reached');
       break;
     }

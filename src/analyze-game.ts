@@ -164,7 +164,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       if (position.isCheck()) move.check = true;
       if (position.isCheckmate()) move.checkmate = true;
       if (position.isStalemate()) move.stalemate = true;
-      if (position.isInsufficientMaterial()) move.insufficient = true;
+      if (position.isDead()) move.insufficient = true;
 
       // run engine
       let res: UCI.Analysis;
