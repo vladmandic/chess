@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as log from '@vladmandic/pilogger';
 import * as UCI from './uci';
-import * as game from './game';
+import * as game from './analyze-game';
 import * as uciOptions from '../analyze.json';
 
 async function main() {
-  log.configure({ inspect: { breakLength: 250 } });
+  log.configure({ inspect: { breakLength: 300 } });
   log.headerJson();
 
   const engine: UCI.Engine = new UCI.Engine(uciOptions as Partial<UCI.Options>); // create engine
@@ -29,15 +29,11 @@ async function main() {
     const analyzedGames: game.Game[] = await game.analyze(engine, pgnText, fileName);
     games.push(...analyzedGames);
   }
-  if (games.length === 1) {
-    log.data('details', games[0]); // full game details
-  } else {
-    for (const g of games) {
-      const summary = { file: g.file, game: g.game, date: g.date, players: g.players, result: g.result, moves: g.moves, time: g.engine?.time };
-      log.data('summary', summary); // one-line short summary
-      log.data('acpl', g.acpl); // one-line short summary
-      log.data('overview', g.overview); // one-line short summary
-    }
+  for (const g of games) {
+    const summary = { file: g.file, game: g.game, date: g.date, players: g.players, result: g.result, moves: g.moves, time: g.engine?.time };
+    log.info('summary', summary); // one-line short summary
+    log.state('acpl', g.acpl); // one-line short summary
+    log.state('overview', g.overview); // one-line short summary
   }
 
   engine.terminate(); // terminate stockfish engine

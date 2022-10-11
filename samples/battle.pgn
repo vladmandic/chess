@@ -1,23 +1,20 @@
 [Event "battle"]
 [Site "https://github.com/vladmandic/chess"]
-[Date "2022.10.10"]
+[Date "2022.10.11"]
 [Round "1"]
 [White "stockfish 11 64 popcnt"]
 [Black "stockfish sf_classical 64 popcnt"]
 [Result "1/2-1/2"]
 [Annotator "https://github.com/vladmandic/chess"]
-[BlackTitle "depth:15 maxtime:250 usedTime: 3013 ms"]
-[ECO "B10"]
-[Opening "Caro-Kann Defense: Accelerated Panov Attack"]
-[PlyCount "82"]
+[BlackTitle "depth:15 maxtime:250 nodes:6141118 usedTime:3268ms"]
+[PlyCount "77"]
 [Termination "3-fold repetition"]
-[WhiteTitle "depth:15 maxtime:250 usedTime: 2972 ms"]
+[WhiteTitle "depth:15 maxtime:250 nodes:9951533 usedTime:3778ms"]
 
-1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 Bg4 8.
-Bc4 e6 9. O-O Be7 10. h3 Bh5 11. Bxd5 exd5 12. Bf4 O-O 13. Re1 Bf6 14. g4 Bg6
-15. Qb3 h5 16. Qxb7 Nxd4 17. Nxd4 Bxd4 18. Nxd5 Qh4 19. Ne7+ Kh7 20. Qf3 Rfe8
-21. g5 Bxb2 22. Rad1 Ba3 23. Nxg6 fxg6 24. Kg2 Bc5 25. Qg3 Rxe1 26. Rxe1 Qxg3+
-27. fxg3 Rd8 28. Re5 Bd4 29. Re2 Bb6 30. h4 Rd5 31. Kf3 Ra5 32. Ke4 Kg8 33. Kd3
-Ra4 34. Kc3 Bc5 35. Rb2 Bf8 36. Kb3 Rb4+ 37. Kc3 Ra4 38. Bb8 Bc5 39. Bf4 Bf8 40.
-Kb3 Rb4+ 41. Kc3 Ra4 1/2-1/2
+1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 e6 8.
+Bd3 Be7 9. O-O O-O 10. Re1 Nf6 11. Bf4 b6 12. a3 Bb7 13. Bc2 Bd6 14. Bg5 Ne7 15.
+Rc1 Ng6 16. Bxf6 Qxf6 17. Be4 Bxe4 18. Nxe4 Qd8 19. g3 Ne7 20. Rc4 b5 21. Rc1 b4
+22. Qd3 bxa3 23. bxa3 h6 24. Red1 Bc7 25. Rc4 Bb6 26. Rdc1 Qd5 27. Nc3 Qh5 28.
+Na4 Qd5 29. Ne5 Rfd8 30. Nxb6 axb6 31. R1c3 Rac8 32. Rxc8 Nxc8 33. Nc6 Rd7 34.
+Nb8 Rd8 35. Nc6 Rd7 36. Nb8 Rd8 37. Nc6 Rd7 38. Nb8 Rd8 39. Nc6 1/2-1/2
 

@@ -1,5 +1,5 @@
 import * as log from '@vladmandic/pilogger';
-import { SFProcess, SFWasm } from './engine';
+import { SFProcess, SFWasm, fatal } from './engine';
 
 export type EngineType = 'process' | 'wasm';
 export type ScoreType = 'cp' | 'mate' | 'lowerbound' | 'upperbound' | 'notfound' | 'syzygy';
@@ -7,6 +7,7 @@ export type State = 'starting' | 'started' | 'stopping' | 'ready' | 'busy' | 'te
 
 export interface Options {
   debug: boolean;
+  verbose: boolean;
   lines: number;
   depth: number;
   maxTime: number;
@@ -72,7 +73,7 @@ export class Engine {
   syzygy: { wdl: string | undefined, dtz: number | undefined } = { wdl: undefined, dtz: undefined };
   name: string | undefined;
   info: string[] = [];
-  options: Options = { lines: 1, depth: 10, maxTime: 0, engine: '', nnue: '', syzygy: '', debug: false, maxScore: 10, options: [], type: 'process' };
+  options: Options = { lines: 1, depth: 10, maxTime: 0, engine: '', nnue: '', syzygy: '', debug: false, verbose: true, maxScore: 10, options: [], type: 'process' };
   state: State;
 
   constructor(options: Partial<Options>) {
@@ -141,7 +142,7 @@ export class Engine {
         }
         if (this.lastReady > 0n && (Number(process.hrtime.bigint() - this.lastReady) / 1000 / 1000) > (10000)) {
           if (this.options.debug) log.warn('uci ready abort:', Number(process.hrtime.bigint() - this.lastReady) / 1000 / 1000);
-          throw new Error('uci ready abort');
+          fatal('engine process unresponsive');
         }
       }, 1);
     });
@@ -198,7 +199,7 @@ export class Engine {
   }
 
   get best(): Analysis {
-    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, nodes: 0, tb: 0, moves: [] }] };
+    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, nodes: 0, tb: -1, moves: [] }] };
     const lines = this.lines.get(this.depth) || [];
     return { depth: this.depth, time: this.duration, lines: lines.filter((line) => line) };
   }
@@ -227,7 +228,7 @@ export class Engine {
   }
 
   processData(infoLine: string) {
-    if (infoLine.includes('mate 0') || infoLine.includes('cp 0')) this.noMoves = true;
+    if (infoLine.includes('mate 0')) this.noMoves = true;
     if (infoLine.includes('currmove')) return;
     if (infoLine.indexOf(' score ') === -1 || infoLine.indexOf(' depth ') === -1) return;
     if (this.noMoves) return;
@@ -249,7 +250,7 @@ export class Engine {
       case 'lowerbound': score = new Score(scoreVal / 100, 'lowerbound'); break;
       case 'upperbound': score = new Score(scoreVal / 100, 'upperbound'); break;
       case 'mate': score = new Score(scoreVal, 'mate'); break;
-      default: throw new Error(`uci parse error: ${infoLine}`);
+      default: fatal(`engine parse error: ${infoLine}`);
     }
     if (!score) return;
     // clearTimeout(this.timeout);

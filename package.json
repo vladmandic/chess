@@ -22,7 +22,7 @@
     "build": "build --profile production",
     "openings": "node --no-warnings src/generate-openings.js",
     "analyze": "build --profile production && node --enable-source-maps --trace-warnings dist/analyze.js $1",
-    "battle": "build --profile production && node --enable-source-maps --trace-warnings --experimental-wasm-simd dist/battle.js"
+    "battle": "build --profile production && node --enable-source-maps --trace-warnings --experimental-wasm-simd dist/battle.js $1"
   },
   "keywords": [],
   "devDependencies": {

@@ -6,6 +6,11 @@ import type { Engine, Options } from './uci';
 
 interface Callback { (lines: string, parent: Engine): void } // eslint-disable-line no-unused-vars
 
+export const fatal = (msg: string) => {
+  log.error('uci', msg);
+  process.exit(1);
+};
+
 export class SFProcess {
   public instance: ChildProcess;
   private callback: Callback;
@@ -14,12 +19,12 @@ export class SFProcess {
   constructor(parent: Engine, callback: Callback) {
     this.options = parent.options;
     this.callback = callback;
-    if (!fs.existsSync(this.options.engine)) throw new Error(`uci error: engine not found: ${this.options.engine}`);
-    if (!fs.statSync(this.options.engine).isFile()) throw new Error(`uci error: engine not valid: ${this.options.engine}`);
+    if (!fs.existsSync(this.options.engine)) fatal(`engine not found: ${this.options.engine}`);
+    if (!fs.statSync(this.options.engine).isFile()) fatal(`engine not valid: ${this.options.engine}`);
     this.instance = spawn(this.options.engine);
-    if (!this.instance.stdout) return;
-    const readline = createInterface({ input: this.instance.stdout });
-    readline.on('line', (line) => {
+    if (!this.instance.stdout || !this.instance.stderr) return;
+    const readlineOut = createInterface({ input: this.instance.stdout });
+    readlineOut.on('line', (line) => {
       if (this.options.debug) log.debug('uci receive:', line);
       this.callback(line, parent);
     });
@@ -58,8 +63,8 @@ export class SFWasm {
 
   async init() {
     const SF = await import(this.options.engine);
-    if (global.fetch) delete global.fetch;
-    this.instance = await SF.default();
+    if (global.fetch) delete global.fetch; // emscripten loader is not compatible with nodejs fetch
+    this.instance = await SF.default(); // initialize wasm
     this.instance.addMessageListener((line) => {
       if (this.options.debug) log.debug('uci receive:', line);
       this.callback(line, this.parent);

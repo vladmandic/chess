@@ -2,7 +2,7 @@
   "maxMoves": 200,
   "numGames": 1,
   "solvedDepth": 4,
-  "initialFEN": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+  "initialFEN": "",
   "pgnOutput": "samples/battle.pgn",
   "openings": "src/openings.json",
   "engineOptions": [
