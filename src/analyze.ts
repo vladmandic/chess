@@ -5,7 +5,7 @@ import * as game from './analyze-game';
 import * as uciOptions from '../analyze.json';
 
 async function main() {
-  log.configure({ inspect: { breakLength: 300 } });
+  log.configure({ inspect: { breakLength: 320 } });
   log.headerJson();
 
   const engine: UCI.Engine = new UCI.Engine(uciOptions as Partial<UCI.Options>); // create engine
@@ -28,12 +28,12 @@ async function main() {
     // analyze game using specified engine and from perspecitive of a specific player
     const analyzedGames: game.Game[] = await game.analyze(engine, pgnText, fileName);
     games.push(...analyzedGames);
-  }
-  for (const g of games) {
-    const summary = { file: g.file, game: g.game, date: g.date, players: g.players, result: g.result, moves: g.moves, time: g.engine?.time };
-    log.info('summary', summary); // one-line short summary
-    log.state('acpl', g.acpl); // one-line short summary
-    log.state('overview', g.overview); // one-line short summary
+    for (const g of analyzedGames) {
+      const summary = { file: g.file, game: g.game, date: g.date, players: g.players, result: g.result, moves: g.moves, time: g.engine?.time };
+      log.info('summary', summary); // one-line short summary
+      log.state('acpl', g.acpl); // one-line short summary
+      log.state('overview', g.overview); // one-line short summary
+    }
   }
 
   engine.terminate(); // terminate stockfish engine

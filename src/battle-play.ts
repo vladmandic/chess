@@ -91,12 +91,15 @@ export async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, co
     }
     const repetitions = fens.filter((f) => f === move.fen).length - 1;
     if (repetitions >= 1) move.repeat = repetitions;
-    if (position.isCheck()) move.check = true;
     if (moveDesc.isCapture()) move.capture = moveDesc.capturedColoredPiece();
+    if (moveDesc.isCastling()) move.castle = true;
+    if (moveDesc.isPromotion()) move.promotion = moveDesc.coloredPromotion();
+    if (position.isCheck()) move.check = true;
     if (position.isCheckmate()) move.checkmate = true;
     if (position.isStalemate()) move.stalemate = true;
     if (position.isDead()) move.insufficient = true;
     if (!position.isLegal()) move.illegal = true;
+
     if (best.lines[0].score.type === 'cp') move.score = best.lines[0].score.score;
     if (best.lines[0].score.type === 'syzygy') {
       move.score = best.lines[0].score.score;

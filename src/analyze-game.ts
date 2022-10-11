@@ -3,6 +3,9 @@ import * as k from 'kokopu';
 import { getOpening, Opening } from './openings';
 import type * as UCI from './uci';
 
+// eslint-disable-next-line max-len
+const squares = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2', 'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3', 'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4', 'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5', 'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6', 'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8'];
+
 export type Color = 'white' | 'black';
 export class Move {
   turn: number;
@@ -12,21 +15,23 @@ export class Move {
   score: number = 0;
   cpl: number = 0;
   color: k.Color;
-  figurine: string;
   fen: string;
   flags?: string;
   opening?: Opening;
   repeat?: number;
+  pieces?: number;
   check?: boolean;
   capture?: string;
   checkmate?: boolean;
   insufficient?: boolean;
   solved?: boolean;
   stalemate?: boolean;
+  castle?: boolean;
+  promotion?: k.ColoredPiece;
 
   constructor(node?: k.Node) {
     this.turn = node ? node?.fullMoveNumber() : -1;
-    this.figurine = node?.figurineNotation() || '';
+    // this.figurine = node?.figurineNotation() || '';
     this.ag = node?.notation() || '';
     // @ts-ignore _data is private
     this.move = node?._data.moveDescriptor.from() ? `${node?._data.moveDescriptor.from()}${node?._data.moveDescriptor.to()}` : undefined; // eslint-disable-line no-underscore-dangle
@@ -153,11 +158,21 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
 
       // annotate move
       if (move.fen) fens.push(move.fen);
-      if (move.move) {
-        const moveDesc = position.uci(move.move);
+      if (move.ag) {
+        const moveDesc = position.notation(move.ag);
+        move.move = position.uci(moveDesc); // update with fully parsed uci notation
+        if (moveDesc.isCastling()) move.castle = true;
         if (moveDesc.isCapture()) move.capture = moveDesc.capturedColoredPiece();
+        if (moveDesc.isPromotion()) move.promotion = moveDesc.coloredPromotion();
       }
       position.play(move.ag);
+      let pieces = '';
+      for (const sq of squares) {
+        const piece = position.square(sq as k.Square);
+        if (piece[0] === 'w') pieces += piece[1].toUpperCase();
+        else if (piece[0] === 'b') pieces += piece[1];
+      }
+      move.pieces = pieces.length;
       const repetitions = fens.filter((f) => f === move.fen).length;
       if (repetitions > 1) move.repeat = repetitions;
       if (move.fen) position.fen(move.fen);
