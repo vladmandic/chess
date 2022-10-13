@@ -1,39 +1,25 @@
 [Event "battle"]
 [Site "https://github.com/vladmandic/chess"]
-[Date "2022.10.11"]
+[Date "2022.10.13"]
 [Round "1"]
 [White "stockfish 11 64 popcnt"]
 [Black "stockfish sf_classical 64 popcnt"]
 [Result "1/2-1/2"]
 [Annotator "https://github.com/vladmandic/chess"]
-[BlackTitle "depth:15 maxtime:250 nodes:10502800 usedTime:4858ms"]
-[PlyCount "308"]
-[Termination "3-fold repetition"]
-[WhiteTitle "depth:15 maxtime:250 nodes:14556752 usedTime:5301ms"]
+[BlackTitle "depth:15 maxtime:250 nodes:8471067 usedTime:4369ms"]
+[PlyCount "136"]
+[Termination "Insufficient material"]
+[WhiteTitle "depth:15 maxtime:250 nodes:12054444 usedTime:4800ms"]
 
 1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 e6 8.
-Bd3 Be7 9. O-O O-O 10. Bc2 b6 11. Be4 Nxc3 12. bxc3 Bb7 13. Bf4 f5 14. Bxc6 Bxc6
-15. Re1 Bd5 16. Re3 Rc8 17. Ne5 Bf6 18. Rg3 Bh4 19. Rh3 g5 20. Bd2 g4 21. Nxg4
-fxg4 22. Qxg4+ Kh8 23. Qxh4 Qxh4 24. Rxh4 Rg8 25. g3 Rgf8 26. a4 Rf3 27. Rg4 Rf5
-28. Rh4 Rf3 29. Rg4 Rf5 30. h3 Bf3 31. Rh4 Kg8 32. Rh6 Bd5 33. Ra3 Rf3 34. Kf1
-Rcf8 35. Bf4 Bc4+ 36. Kg1 Rd3 37. Ra1 Rxc3 38. Rh4 Be2 39. d5 exd5 40. Rh6 Bf3
-41. a5 bxa5 42. Ra6 Rf7 43. R6xa5 Rd3 44. Ra6 Rd7 45. Rf6 Rd1+ 46. Rxd1 Bxd1 47.
-Kf1 Bb3 48. Ke1 Bc4 49. Rc6 a5 50. Be3 a4 51. Rc8+ Kf7 52. Ra8 d4 53. Rxa4 dxe3
-54. Rxc4 exf2+ 55. Kxf2 Rd3 56. Rf4+ Kg6 57. Rg4+ Kh5 58. Re4 Kg6 59. Re6+ Kg5
-60. Kg2 Kf5 61. Rh6 Rd7 62. g4+ Kg5 63. Rh5+ Kg6 64. h4 Rd2+ 65. Kf3 Rd3+ 66.
-Ke4 Rh3 67. Kf4 h6 68. Rc5 Rxh4 69. Rc6+ Kf7 70. Kf5 Rh1 71. Rc7+ Kg8 72. Kg6
-Kf8 73. Rc6 Ke7 74. Rb6 Kd7 75. Kf7 Rh4 76. Rg6 Rh3 77. Kf6 Rh4 78. Ke5 Rh1 79.
-Rg7+ Ke8 80. Kf6 Kf8 81. Rb7 Rf1+ 82. Kg6 Rh1 83. Rf7+ Ke8 84. Rg7 Rh4 85. Kf5
-Rh1 86. Kf6 Rh4 87. Rg8+ Kd7 88. Kf5 Rh1 89. Ra8 Ke7 90. Ra7+ Ke8 91. Kf6 Rh4
-92. Ke6 Kf8 93. Kf5 Rh1 94. Kf6 Rf1+ 95. Kg6 Rh1 96. Ra8+ Ke7 97. Ra6 Rh4 98.
-Kf5 Rh1 99. Kg6 Rh4 100. Kf5 Rh1 101. Rb6 Kf7 102. Rb7+ Ke8 103. Kg6 Rh4 104.
-Kf5 Rh1 105. Kf6 Rf1+ 106. Kg6 Rh1 107. Rg7 Rh4 108. Kf5 Rh1 109. Kf6 Rh4 110.
-Rg8+ Kd7 111. Kf5 Rh1 112. Ra8 Ke7 113. Ra7+ Ke8 114. Kf6 Rh4 115. Ke6 Kf8 116.
-Kf5 Rh1 117. Kf6 Rf1+ 118. Kg6 Rh1 119. Rc7 Rh4 120. Kf6 Ke8 121. Ke6 Kf8 122.
-Rc8+ Kg7 123. Kf5 Rh1 124. Rc7+ Kg8 125. Kg6 Kf8 126. Rc5 Rh4 127. Kf5 Ke7 128.
-Rc1 Kd8 129. Rb1 Kd7 130. Re1 Kd8 131. Rd1+ Ke7 132. Ra1 Kd8 133. Ra7 Ke8 134.
-Ra6 Rh1 135. Ra8+ Kf7 136. Ra7+ Kf8 137. Kf6 Ke8 138. Kg6 Rh4 139. Ra8+ Ke7 140.
-Kf5 Rh1 141. Ra7+ Kf8 142. Kf6 Rf1+ 143. Kg6 Rg1 144. Ra4 Rh1 145. Ra8+ Ke7 146.
-Rh8 Rg1 147. Kh5 Rh1+ 148. Kg6 Rg1 149. Kf5 Rf1+ 150. Kg6 Rg1 151. Kf5 Rf1+ 152.
-Kg6 Rg1 153. Kf5 Rf1+ 154. Kg6 Rg1 1/2-1/2
+Bd3 Be7 9. O-O O-O 10. Re1 Nf6 11. a3 b6 12. Bf4 Bb7 13. Bc2 Bd6 14. Bg5 Ne7 15.
+Bxf6 gxf6 16. Be4 Bxe4 17. Rxe4 f5 18. Re1 Ng6 19. g3 Qf6 20. Qe2 Rad8 21. Rad1
+Rfe8 22. h4 Qg7 23. Kh1 Kf8 24. Ne5 Ne7 25. Kh2 Qh6 26. h5 Qg7 27. f4 Bc7 28.
+Qf3 h6 29. Rg1 f6 30. Nc4 Qf7 31. Ne3 e5 32. fxe5 fxe5 33. dxe5 Bxe5 34. Rgf1
+Kg7 35. Rxd8 Rxd8 36. Kh3 Rd2 37. Nxf5+ Qxf5+ 38. Qxf5 Nxf5 39. Rxf5 Bxc3 40.
+bxc3 Ra2 41. Rd5 Rxa3 42. c4 Kf6 43. Kh4 Ke6 44. Rd8 Rf3 45. Ra8 Rf7 46. g4 Ke5
+47. Re8+ Kd4 48. Re6 Rh7 49. Re8 Rf7 50. Re6 Rh7 51. g5 hxg5+ 52. Kxg5 Rh8 53.
+h6 a5 54. Rxb6 Kxc4 55. Ra6 Kb5 56. Ra7 Kb6 57. Rf7 a4 58. Rf1 Kc5 59. Kg6 a3
+60. h7 Kc4 61. Kg7 Ra8 62. Rf8 Ra7+ 63. Kg8 Rxh7 64. Kxh7 a2 65. Rf1 Kb3 66. Rg1
+Kb2 67. Kg6 a1=Q 68. Rxa1 Kxa1 1/2-1/2
 
