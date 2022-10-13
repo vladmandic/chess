@@ -2,7 +2,7 @@
 
 Written in **TypeScript**, using **UCI Engine**, managed from **NodeJS**
 
-Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.org/) and [Beserk](https://github.com/jhonnold/berserk)  
+Tested using [Stockfish](https://stockfishchess.org/), [LCZero](https://lczero.org/), [Beserk](https://github.com/jhonnold/berserk) and [SmallBrain](https://github.com/Disservin/Smallbrain) for Windows and Linux  
 Also compatibile with **Stockfish WASM** ports like [1](https://github.com/lichess-org/stockfish.wasm) or [2](https://github.com/hi-ogawa/Stockfish)  
 
 

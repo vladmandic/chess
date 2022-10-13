@@ -39,7 +39,7 @@ export const initOpenings = (openingsFile = 'src/openings.json') => {
 };
 
 export const getOpening = (moves: string[]) => { // takes sequence of ag/san or uci moves
-  const uci = moves[0].length === 4 && moves[0][0].match(/[0-9]/) && moves[0][2].match(/[0-9]/);
+  const uci = (moves[0].length === 4) && moves[0][1].match(/[0-9]/) && moves[0][3].match(/[0-9]/);
   if (openings.length === 0) initOpenings();
   const best = uci
     ? openings.find((opening) => opening.uciMoves?.length === moves.length && arrayStartsWith(moves, opening.uciMoves))
