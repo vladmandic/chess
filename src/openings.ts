@@ -47,3 +47,10 @@ export const getOpening = (moves: string[]) => { // takes sequence of ag/san or 
   if (best) return best;
   return undefined;
 };
+
+export const getPosition = (fen: string) => {
+  const short = fen.split(' ')[0];
+  const best = openings.find((opening) => opening.epd?.startsWith(short));
+  if (best) return best;
+  return undefined;
+};

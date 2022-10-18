@@ -1,7 +1,7 @@
 import * as log from '@vladmandic/pilogger';
 import * as k from 'kokopu';
 import type * as UCI from './uci';
-import { getOpening } from './openings';
+import { getOpening, getPosition } from './openings';
 import type { Config } from './battle';
 
 // eslint-disable-next-line max-len
@@ -82,13 +82,21 @@ export async function playGame(ew: UCI.Engine, eb: UCI.Engine, round: number, co
       if (solved) move.solved = solved;
     }
 
-    // annotate move
-    const opening = getOpening(moves);
-    if (opening) {
-      move.opening = { eco: opening.eco, name: opening.name };
-      game.eco(opening.eco);
-      game.opening(opening.name);
+    // check opening database
+    const openingMoves = getOpening(moves);
+    if (openingMoves) {
+      move.opening = { eco: openingMoves.eco, name: openingMoves.name };
+      game.eco(openingMoves.eco);
+      game.opening(openingMoves.name);
     }
+    const openingPosition = getPosition(fen);
+    if (openingPosition && (openingPosition?.eco !== openingMoves?.eco)) {
+      move.position = { eco: openingPosition.eco, name: openingPosition.name };
+      const o = game.opening() || '';
+      game.opening(`${o ? (o + ' => ') : ''}${openingPosition.name}`);
+    }
+
+    // annotate move
     const repetitions = fens.filter((f) => f === move.fen).length - 1;
     if (repetitions >= 1) move.repeat = repetitions;
     if (moveDesc.isCapture()) move.capture = moveDesc.capturedColoredPiece();

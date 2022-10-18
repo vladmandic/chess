@@ -1,6 +1,6 @@
 import * as log from '@vladmandic/pilogger';
 import * as k from 'kokopu';
-import { getOpening, Opening } from './openings';
+import { getOpening, getPosition, Opening } from './openings';
 import type * as UCI from './uci';
 
 // eslint-disable-next-line max-len
@@ -18,6 +18,7 @@ export class Move {
   fen: string;
   flags?: string;
   opening?: Opening;
+  position?: Opening;
   repeat?: number;
   pieces?: number;
   check?: boolean;
@@ -65,6 +66,7 @@ export class Game {
   acpl: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
   overview: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
   opening?: Opening;
+  position?: Opening;
 
   constructor(data?: Partial<Game>) {
     this.analyzed = new Date();
@@ -148,11 +150,16 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       moves.push(move.ag);
 
       // check opening database
-      if (j < 20) {
-        const opening = getOpening(moves);
-        if (opening) {
-          move.opening = { eco: opening.eco, name: opening.name };
+      if (j < 24) {
+        const openingMoves = getOpening(moves);
+        if (openingMoves) {
+          move.opening = { eco: openingMoves.eco, name: openingMoves.name };
           game.opening = move.opening;
+        }
+        const openingPosition = getPosition(position.fen());
+        if (openingPosition && (openingPosition?.eco !== openingMoves?.eco)) {
+          move.position = { eco: openingPosition.eco, name: openingPosition.name };
+          game.position = { eco: openingPosition.eco, name: openingPosition.name };
         }
       }
 
