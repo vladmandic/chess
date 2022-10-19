@@ -1,27 +1,30 @@
 [Event "battle"]
 [Site "https://github.com/vladmandic/chess"]
-[Date "2022.10.18"]
+[Date "2022.10.19"]
 [Round "1"]
 [White "stockfish 11 64 popcnt"]
 [Black "stockfish sf_classical 64 popcnt"]
-[Result "0-1"]
+[Result "1-0"]
 [Annotator "https://github.com/vladmandic/chess"]
-[BlackTitle "depth:15 maxtime:250 nodes:6083933 usedTime:2929ms"]
+[BlackTitle "depth:15 maxtime:250 nodes:19201951 usedTime:7172ms"]
 [ECO "B10"]
 [Opening "Caro-Kann Defense: Accelerated Panov Attack => Scandinavian Defense: Panov Transfer"]
-[PlyCount "142"]
-[Termination "Black wins"]
-[WhiteTitle "depth:15 maxtime:250 nodes:9800339 usedTime:3553ms"]
+[PlyCount "181"]
+[Termination "White wins"]
+[WhiteTitle "depth:15 maxtime:250 nodes:22936365 usedTime:6333ms"]
 
 1. e4 c6 2. c4 d5 3. exd5 Nf6 4. Nc3 cxd5 5. cxd5 Nxd5 6. d4 Nc6 7. Nf3 e6 8.
-Bd3 Be7 9. O-O O-O 10. Re1 Nf6 11. a3 b6 12. Bf4 Bb7 13. Rc1 Rc8 14. Bc2 Bd6 15.
-Bg5 h6 16. Bxf6 Qxf6 17. Qd3 g6 18. Ne4 Qd8 19. Qd2 Kg7 20. Bb3 Ne7 21. Rxc8
-Bxc8 22. d5 Nxd5 23. Bxd5 exd5 24. Nc3 Bb7 25. Rd1 Be7 26. Nxd5 Bxd5 27. Qxd5
-Qxd5 28. Rxd5 Rc8 29. g3 Rc2 30. Rd2 Rxd2 31. Nxd2 Kf6 32. Kf1 Ke5 33. Ke2 Kd4
-34. h4 a5 35. Nf3+ Kd5 36. a4 f5 37. Kd3 Bc5 38. h5 gxh5 39. Nh4 Bxf2 40. Nxf5
-Ke5 41. Ng7 Bxg3 42. Nxh5 Bh2 43. Ke3 Kf5 44. Kf3 Be5 45. Ng3+ Bxg3 46. Kxg3 Kg5
-47. Kf3 Kf5 48. Kg3 Kg5 49. Kf3 h5 50. Ke3 h4 51. Ke4 Kg4 52. Kd5 h3 53. Kc6 h2
-54. Kxb6 h1=Q 55. Kxa5 Qd5+ 56. Kb4 Qd3 57. b3 Qc2 58. a5 Qa2 59. Kc3 Qxa5+ 60.
-Kc4 Kf3 61. b4 Qa4 62. Kc5 Ke4 63. b5 Qa8 64. Kd6 Qd5+ 65. Kc7 Qxb5 66. Kd6 Qb6+
-67. Ke7 Ke5 68. Kf7 Kf5 69. Ke8 Qc7 70. Kf8 Kf6 71. Kg8 Qg7# 0-1
+Bd3 Be7 9. O-O O-O 10. a3 b6 11. Qc2 Nf6 12. Bg5 h6 13. Bxf6 Bxf6 14. Bh7+ Kh8
+15. Be4 Bd7 16. Rad1 Rc8 17. Qe2 Qc7 18. Rd3 Rfd8 19. Rfd1 Ne7 20. Ne5 Be8 21.
+Nf3 a5 22. a4 g6 23. d5 exd5 24. Bxd5 Kg7 25. g3 Nxd5 26. Nxd5 Rxd5 27. Rxd5
+Bxa4 28. Re1 Bc6 29. Rdd1 Ba8 30. Nd4 Qb7 31. f3 Rc5 32. Qf2 Rd5 33. Rd2 a4 34.
+Red1 b5 35. Kg2 Be7 36. Ne2 Bc5 37. Qf1 Re5 38. Nf4 Qe7 39. Re2 Be3 40. Rde1 g5
+41. Nh5+ Kf8 42. Rc2 Bb7 43. g4 f5 44. Kh3 b4 45. Ng3 f4 46. Nh5 b3 47. Rc4 a3
+48. bxa3 Qd6 49. Rb1 Ba6 50. Rxb3 Qc6 51. Rb8+ Re8 52. Qa1 Qxf3+ 53. Ng3 Bxc4
+54. Qh8+ Bg8 55. Qxh6+ Ke7 56. Qxg5+ Kf8 57. Rxe8+ Kxe8 58. Qxg8+ Ke7 59. Qh7+
+Kd6 60. Qe4 Qf2 61. Nf5+ Kc5 62. Ne7 Kb5 63. Qg2 Qe1 64. g5 Bd2 65. Qd5+ Ka4 66.
+Qc4+ Kxa3 67. Nf5 Qd1 68. Nh4 Be3 69. Qc3+ Ka2 70. Qc6 f3 71. Qe6+ Qb3 72. Qxb3+
+Kxb3 73. Nxf3 Kc4 74. Kg4 Kc5 75. Kf5 Kd6 76. Kf6 Bc1 77. h4 Kd5 78. g6 Bb2+ 79.
+Kf7 Kc5 80. g7 Kc4 81. h5 Kd5 82. g8=Q Kc5 83. Qc8+ Kb4 84. Nd2 Ka5 85. Nc4+ Kb5
+86. Nxb2 Kb6 87. h6 Ka5 88. Qc5+ Ka6 89. h7 Kb7 90. h8=Q Ka6 91. Qa8# 1-0
 

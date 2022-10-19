@@ -11,14 +11,14 @@ export class Move {
   turn: number;
   ag: string;
   move: string;
-  best: string = '';
+  options: Record<string, number> = {};
   score: number = 0;
   cpl: number = 0;
   color: k.Color;
   fen: string;
   flags?: string;
-  opening?: Opening;
-  position?: Opening;
+  opening?: string;
+  position?: string;
   repeat?: number;
   pieces?: number;
   check?: boolean;
@@ -84,18 +84,17 @@ export class Game {
 const getACPL = (game: Game, cuttoffScore: number, color: Color): number | undefined => {
   const lastMove = cuttoffScore && cuttoffScore > 0 ? game.line.findIndex((move) => (move.score) >= cuttoffScore) : game.line.length - 1;
   const line = game.line.slice(0, lastMove).filter((move) => color.startsWith(move.color));
-  const acpl = Math.round(100 * line.reduce((prev, curr) => prev += curr.cpl, 0) / line.length);
+  const acpl = Math.round(100 * line.reduce((prev, curr) => (Math.abs(curr.cpl) < 100 ? prev += curr.cpl : prev), 0) / line.length);
   return Math.abs(acpl);
 };
 
 const getFlags = (move: Move) => {
   if (move.flags) return move.flags;
-  // if (Math.abs(move.score) > 10) return undefined;
-  if (move.move === move.best) return 'best';
-  if (move.cpl >= 2.0) return 'blunder';
-  if (move.cpl >= 1.0) return 'mistake';
-  if (move.cpl >= 0.5) return 'inaccurate';
-  if (move.cpl >= 0.0) return 'good';
+  if (move.cpl >= 3.0) return 'blunder';
+  if (move.cpl >= 2.0) return 'mistake';
+  if (move.cpl >= 1.0) return 'inaccurate';
+  if (move.cpl >= 0.5) return 'good';
+  if (move.cpl >= 0.0) return 'best';
   if (move.cpl <= -1.0) return 'great';
   return 'ok';
 };
@@ -149,20 +148,6 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       const move = new Move(nodes[j]); // create played move
       moves.push(move.ag);
 
-      // check opening database
-      if (j < 24) {
-        const openingMoves = getOpening(moves);
-        if (openingMoves) {
-          move.opening = { eco: openingMoves.eco, name: openingMoves.name };
-          game.opening = move.opening;
-        }
-        const openingPosition = getPosition(position.fen());
-        if (openingPosition && (openingPosition?.eco !== openingMoves?.eco)) {
-          move.position = { eco: openingPosition.eco, name: openingPosition.name };
-          game.position = { eco: openingPosition.eco, name: openingPosition.name };
-        }
-      }
-
       // annotate move
       if (move.fen) fens.push(move.fen);
       if (move.ag) {
@@ -188,6 +173,20 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       if (position.isStalemate()) move.stalemate = true;
       if (position.isDead()) move.insufficient = true;
 
+      // check opening database
+      if (j < 24) {
+        const openingMoves = getOpening(moves);
+        if (openingMoves) {
+          move.opening = `${openingMoves.eco}: ${openingMoves.name}`;
+          game.opening = { eco: openingMoves.eco, name: openingMoves.name };
+        }
+        const openingPosition = getPosition(position.fen());
+        if (openingPosition && (openingPosition?.eco !== openingMoves?.eco)) {
+          move.position = `${openingPosition.eco}: ${openingPosition.name}`;
+          game.position = { eco: openingPosition.eco, name: openingPosition.name };
+        }
+      }
+
       // run engine
       let res: UCI.Analysis;
       res = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
@@ -197,14 +196,15 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
         continue;
       }
       const best: UCI.Line = res.lines[0];
-      move.best = best.moves[0]; // only interested first move from sequence
+      for (const line of res.lines) move.options[line.moves[0] === move.move ? `*${line.moves[0]}` : line.moves[0]] = line.score.score;
+      // move.best = best.moves[0]; // only interested first move from sequence
       game.line.push(move); // add move to game
 
       // check engine scores
       if (best.score.type === 'cp') scores.push(best.score.score); // add normalized score
       if (best.score.type === 'mate') {
         scores.push((move.color === 'w' ? 1 : -1) * 100);
-        previous.flags = `mate in ${best.score.score}`;
+        previous.flags = `mate in ${best.score.moves}`;
       }
       if (best.score.type === 'syzygy') {
         scores.push(best.score.score);
@@ -221,7 +221,12 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
         if (!move[key]) delete move[key];
       }
 
-      if (previous.move && engine.options.verbose) log.data(previous);
+      if (previous.move && engine.options.verbose) {
+        const data = JSON.parse(JSON.stringify(previous));
+        delete data.turn;
+        delete data.color;
+        log.data('move', previous.turn, previous.color, data);
+      }
 
       // switch moves
       previous = move; // switch current move to previous
@@ -230,7 +235,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       if (engine.options.debug) {
         best.moves.length = 1;
         log.data('move', { move, previous });
-        log.data('engine', { turn: move.turn, depth: engine.best.depth, time: engine.best.time, lines: engine.best.lines.length, best });
+        log.data('engine', { turn: move.turn, depth: engine.analysis.depth, time: engine.analysis.time, lines: engine.analysis.lines.length, best });
       }
     }
     const t1 = process.hrtime.bigint();

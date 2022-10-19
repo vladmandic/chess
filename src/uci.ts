@@ -24,19 +24,22 @@ export interface UCIResult {
 }
 
 export class Score {
-  score: number; // The score for the analysis.
-  type: ScoreType; // Type of the score.
+  score: number;
+  moves: number;
+  type: ScoreType;
 
-  constructor(score: number, type: ScoreType) {
+  constructor(score: number, type: ScoreType, moves: number) {
     this.score = score;
+    if (type === 'syzygy' || type === 'mate') this.score = 100 - this.score;
+    this.moves = moves;
     this.type = type;
   }
 
   toString() {
     switch (this.type) {
       case 'cp': return this.score;
-      case 'syzygy': return `solved score ${this.score}`;
-      case 'mate': return `mate in ${this.score}`;
+      case 'syzygy': return `solved score ${this.moves}`;
+      case 'mate': return `mate in ${this.moves}`;
       case 'lowerbound': return `>= ${this.score}`;
       case 'upperbound': return `<= ${this.score}`;
       default: return '';
@@ -45,6 +48,7 @@ export class Score {
 }
 
 export interface Line {
+  depth: number,
   score: Score,
   moves: string[],
   nodes: number,
@@ -185,7 +189,7 @@ export class Engine {
     if (this.options.depth > 0) this.instance.send(`go depth ${this.options.depth}`);
     else this.instance.send('go infinite');
     await this.ready();
-    return this.best;
+    return this.analysis;
   }
 
   async solve(): Promise<{ wdl: string, dtz?: number } | undefined> {
@@ -198,10 +202,19 @@ export class Engine {
     return res;
   }
 
-  get best(): Analysis {
-    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0 }, nodes: 0, tb: -1, moves: [] }] };
-    const lines = this.lines.get(this.depth) || [];
-    return { depth: this.depth, time: this.duration, lines: lines.filter((line) => line) };
+  get analysis(): Analysis {
+    if (this.noMoves) return { depth: 0, time: 0, lines: [{ score: { type: 'mate', score: 0, moves: 0 }, nodes: 0, tb: -1, depth: 0, moves: [] }] };
+    const lines: Line[] = [];
+    for (let i = this.depth; i >= this.depth - 1; i--) {
+      const linesAtDepth = (this.lines.get(i) || []).filter((line) => line);
+      for (let j = 0; j < linesAtDepth.length; j++) {
+        if (lines.findIndex((l) => l.moves[0] === linesAtDepth[j].moves[0]) === -1) lines.push(linesAtDepth[j]);
+      }
+    }
+    if (lines.length > this.options.lines) lines.length = this.options.lines;
+    // const lines: Line[] = allLines.sort((a, b) => (2 * b.depth + b.score.score) - (2 * a.depth + a.score.score));
+    if (lines.length > this.depth / 2) lines.length = Math.trunc(this.depth / 2);
+    return { depth: this.depth, time: this.duration, lines };
   }
 
   terminate() {
@@ -237,7 +250,8 @@ export class Engine {
     const str = (s) => words[idx(s)];
     const num = (s) => Number(str(s));
     // Parse the depth of the stockfish output.
-    const depth = Math.max(num('seldepth') || 0, num('depth') || 0);
+    // const depth = Math.max(num('seldepth') || 0, num('depth') || 0);
+    const depth = num('depth') || 0;
     const pv = num('multipv') || 1;
     const tb = num('tbhits') || 0;
     const nodes = num('nodes') || 0;
@@ -246,17 +260,17 @@ export class Engine {
     // Parse the score of the stockfish output.
     let score: Score | undefined;
     switch (scoreType) {
-      case 'cp': score = new Score(scoreVal / 100, 'cp'); break;
-      case 'lowerbound': score = new Score(scoreVal / 100, 'lowerbound'); break;
-      case 'upperbound': score = new Score(scoreVal / 100, 'upperbound'); break;
-      case 'mate': score = new Score(scoreVal, 'mate'); break;
+      case 'cp': score = new Score(scoreVal / 100, 'cp', 0); break;
+      case 'lowerbound': score = new Score(scoreVal / 100, 'lowerbound', 0); break;
+      case 'upperbound': score = new Score(scoreVal / 100, 'upperbound', 0); break;
+      case 'mate': score = new Score(scoreVal, 'mate', scoreVal); break;
       default: fatal(`engine parse error: ${infoLine}`);
     }
     if (!score) return;
     // clearTimeout(this.timeout);
     if (this.turn === 'black') score.score *= -1;
     const moves = words.slice(idx('pv'));
-    const line: Line = { score, moves, nodes, tb };
+    const line: Line = { score, moves, depth, nodes, tb };
     const lines: Line[] = this.lines.get(depth) || new Array(this.options.lines);
     lines[pv - 1] = line;
     this.lines.set(depth, lines);
