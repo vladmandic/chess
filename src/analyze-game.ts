@@ -55,7 +55,9 @@ export interface EngineInfo {
 export class Game {
   file: string | undefined;
   game: number;
+  totalGames: number;
   moves: number;
+  decidedMove: number = 0;
   date: Date | undefined;
   analyzed: Date | undefined;
   players: [string, string];
@@ -63,8 +65,8 @@ export class Game {
   line: Move[];
   pgn: string[] = [];
   engine: EngineInfo | undefined;
-  acpl: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
-  overview: { white: Record<string, unknown>, black: Record<string, unknown>} = { white: {}, black: {} };
+  acpl: { white: Record<string, unknown>, black: Record<string, unknown>} | { white: unknown, black: unknown } = { white: {}, black: {} };
+  overview: { white: Record<string, unknown>, black: Record<string, unknown>} | { white: unknown, black: unknown } = { white: {}, black: {} };
   opening?: Opening;
   position?: Opening;
 
@@ -72,6 +74,7 @@ export class Game {
     this.analyzed = new Date();
     this.file = data?.file;
     this.game = data?.game || 0;
+    this.totalGames = 0;
     this.moves = data?.moves || 0;
     this.date = data?.date;
     this.players = data?.players || ['', ''];
@@ -84,6 +87,7 @@ export class Game {
 const getACPL = (game: Game, cuttoffScore: number, color: Color): number | undefined => {
   const lastMove = cuttoffScore && cuttoffScore > 0 ? game.line.findIndex((move) => (move.score) >= cuttoffScore) : game.line.length - 1;
   const line = game.line.slice(0, lastMove).filter((move) => color.startsWith(move.color));
+  game.decidedMove = game.line[lastMove].turn;
   const acpl = Math.round(100 * line.reduce((prev, curr) => (Math.abs(curr.cpl) < 100 ? prev += curr.cpl : prev), 0) / line.length);
   return Math.abs(acpl);
 };
@@ -130,6 +134,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     const game = new Game({
       file: pgnFile,
       game: i + 1,
+      totalGames: database.gameCount(),
       moves: Math.round(nodes.length / 2),
       date: pgnGame.dateAsDate(),
       players,
@@ -191,7 +196,7 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
       let res: UCI.Analysis;
       res = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
       while ((res?.lines?.length || 0) < 1) {
-        log.warn('no move found, retrying:', res);
+        if (engine.options.debug) log.warn('no move found, retrying:', res);
         res = await engine.play(previous.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1');
         continue;
       }
@@ -240,14 +245,25 @@ export async function analyze(engine: UCI.Engine, pgnText: string, pgnFile: stri
     }
     const t1 = process.hrtime.bigint();
     game.line.length = Math.min(game.line.length, nodes.length);
-    game.acpl = {
-      white: { full: getACPL(game, 0, 'white'), decided: getACPL(game, 10, 'white') },
-      black: { full: getACPL(game, 0, 'black'), decided: getACPL(game, 10, 'black') },
-    };
-    game.overview = {
-      white: { full: getOverview(game, 0, 'white'), decided: getOverview(game, 10, 'white') },
-      black: { full: getOverview(game, 0, 'black'), decided: getOverview(game, 10, 'black') },
-    };
+    if (engine.options.verbose || engine.options.debug) {
+      game.acpl = {
+        white: { full: getACPL(game, 0, 'white'), decided: getACPL(game, 10, 'white') },
+        black: { full: getACPL(game, 0, 'black'), decided: getACPL(game, 10, 'black') },
+      };
+      game.overview = {
+        white: { full: getOverview(game, 0, 'white'), decided: getOverview(game, 10, 'white') },
+        black: { full: getOverview(game, 0, 'black'), decided: getOverview(game, 10, 'black') },
+      };
+    } else {
+      game.acpl = {
+        white: getACPL(game, 10, 'white'),
+        black: getACPL(game, 10, 'black'),
+      };
+      game.overview = {
+        white: getOverview(game, 10, 'white'),
+        black: getOverview(game, 10, 'black'),
+      };
+    }
     if (game.engine) game.engine.time = Math.round(Number(t1 - t0) / 1000 / 1000);
     games.push(game);
   }

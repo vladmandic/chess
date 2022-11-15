@@ -2,9 +2,10 @@
   "debug": false,
   "verbose": true,
   "lines": 3,
-  "depth": 10,
-  "maxTime": 5000,
+  "depth": 15,
+  "maxTime": 100,
   "maxScore": 10,
-  "engine": "../engine/lichess-org/stockfish.js",
-  "type": "wasm"
+  "engine": "engine/stockfish-15/sf15-bmi2",
+  "nnue": "nn-6877cd24400e.nnue",
+  "syzygy": "engine/syzygy"
 }

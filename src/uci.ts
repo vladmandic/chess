@@ -82,15 +82,16 @@ export class Engine {
 
   constructor(options: Partial<Options>) {
     this.state = 'starting';
-    if (options?.depth) this.options.depth = options.depth;
-    if (options?.lines) this.options.lines = options.lines;
-    if (options?.maxTime) this.options.maxTime = options.maxTime;
-    if (options?.debug) this.options.debug = options.debug;
-    if (options?.engine) this.options.engine = options.engine;
-    if (options?.syzygy) this.options.syzygy = options.syzygy;
-    if (options?.nnue) this.options.nnue = options.nnue;
-    if (options?.options) this.options.options = options.options;
-    if (options?.type) this.options.type = options.type;
+    this.options.debug = options?.debug || false;
+    this.options.depth = options?.depth || 10;
+    this.options.engine = options?.engine || '';
+    this.options.lines = options?.lines || 1;
+    this.options.maxTime = options?.maxTime || 0;
+    this.options.nnue = options?.nnue || '';
+    this.options.options = options?.options || [];
+    this.options.syzygy = options?.syzygy || '';
+    this.options.type = options?.type || 'process';
+    this.options.verbose = options?.verbose || false;
     this.instance = this.options.type === 'process'
       ? new SFProcess(this, this.processLine)
       : new SFWasm(this, this.processLine);

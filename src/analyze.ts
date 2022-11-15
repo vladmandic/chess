@@ -1,17 +1,19 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as log from '@vladmandic/pilogger';
 import * as UCI from './uci';
 import * as game from './analyze-game';
-import * as uciOptions from '../analyze.json';
 
 async function main() {
   log.configure({ inspect: { breakLength: 320 } });
   log.headerJson();
 
+  const optionsFile = fs.readFileSync(path.join(__dirname, '../analyze.json'), 'utf8');
+  const uciOptions = JSON.parse(optionsFile);
   const engine: UCI.Engine = new UCI.Engine(uciOptions as Partial<UCI.Options>); // create engine
   await engine.init(); // wait until engine is ready
   log.state('engine', { name: engine.name, state: engine.state, info: engine.info });
-  log.state('options', engine.options);
+  if (engine.options.verbose === true) log.state('options', engine.options);
 
   const games: game.Game[] = [];
   const args = process.argv.slice(2); // all cli ars after process name
@@ -22,17 +24,16 @@ async function main() {
     const globby = await import('globby'); // dynamic import as globby is esm
     files = await globby.globby(args, { expandDirectories: true, gitignore: true, deep: 2 }); // find matching files
   }
-  log.info('list', { files: files.length });
+  if (files.length > 1) log.info('list', { files: files.length });
   for (const fileName of files) {
     const pgnText = fs.readFileSync(fileName, 'utf8');
     // analyze game using specified engine and from perspecitive of a specific player
     const analyzedGames: game.Game[] = await game.analyze(engine, pgnText, fileName);
     games.push(...analyzedGames);
     for (const g of analyzedGames) {
-      const summary = { file: g.file, game: g.game, date: g.date, players: g.players, result: g.result, moves: g.moves, time: g.engine?.time };
-      log.info('summary', summary); // one-line short summary
-      log.state('acpl', g.acpl); // one-line short summary
-      log.state('overview', g.overview); // one-line short summary
+      const summary = { file: g.file, date: g.date, players: g.players, result: g.result, moves: g.moves, decided: g.decidedMove, time: g.engine?.time, acpl: [g.acpl.white, g.acpl.black] };
+      if (g.totalGames > 1) summary['game'] = g.game;
+      log.state({ summary, moves: g.overview }); // one-line short summary
     }
   }
 
